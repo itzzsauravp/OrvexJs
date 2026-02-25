@@ -6,7 +6,6 @@ export async function initHasher() {
   if (!hasher) {
     hasher = await xxhash();
   }
-  return hasher;
 }
 
 export function quickHash(data: string) {

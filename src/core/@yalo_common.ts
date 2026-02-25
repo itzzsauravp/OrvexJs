@@ -1,1 +1,1 @@
-export * from "../types/yalo.types"
+export * from "../types/yalo.types";
