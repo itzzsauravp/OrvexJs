@@ -1,6 +1,12 @@
 import net from "node:net";
 import { initHasher, quickHash } from "../helpers/hashGenerator";
-import { TRoutehandler, HTTP, TYaloRoutes, TRouteDefinition } from "../core/@yalo_common";
+import {
+  TRoutehandler,
+  HTTP,
+  TYaloRoutes,
+  TRouteDefinition,
+  TYaloMiddelware,
+} from "../core/@yalo_common";
 import { YaloRequest, YaloResponse, Branch } from ".";
 
 export class Yalo {
@@ -9,9 +15,10 @@ export class Yalo {
    */
   private routes: TYaloRoutes = new Map<string, TRouteDefinition>();
 
-  constructor(private readonly mode: "dev" | "prod" = "dev") {
-    this.mode = mode;
-  }
+  private branchMiddlewares: TYaloMiddelware = [];
+  private globalMiddlewares: TYaloMiddelware = [];
+
+  constructor() {}
 
   /**
    * Retrieves the registered handler for the current incoming request.
@@ -19,7 +26,7 @@ export class Yalo {
    * @returns The route handler that is associated with the current request.
    * @throws {Error} Throws error indicating which method and url was not found.
    */
-  private getCurrentRoutesHandler(request: YaloRequest): TRoutehandler {
+  private getCurrentRouteInfo(request: YaloRequest): TRouteDefinition {
     const route_hash = quickHash(`${request.method}-${request.url}`);
     const routeInfo = this.routes.get(route_hash);
 
@@ -27,7 +34,7 @@ export class Yalo {
       throw new Error(`[Yalo] Route not found: ${request.method} ${request.url}`);
     }
 
-    return routeInfo.handler;
+    return routeInfo;
   }
 
   /**
@@ -61,14 +68,39 @@ export class Yalo {
   }
 
   /**
+   *  This method is mainly intended to use with Branch() or Yalo.create() instances to add middlewares to them ( can be used interchangeably with `.guard` method but `not recommended` )
+   * @param middlewares Array of middleware of type TYaloMiddelware
+   * @returns
+   */
+  public wire(middlewares: TYaloMiddelware): Yalo {
+    //TODO: check instance and then add middleware to branch or global
+    this.branchMiddlewares = [...this.branchMiddlewares, ...middlewares];
+    return this;
+  }
+
+  public gwire(middelware: TYaloMiddelware) {
+    this.globalMiddlewares = [...this.globalMiddlewares, ...middelware];
+  }
+
+  /**
    *
    * @param method HTTP methods like 'GET', 'POST' etc, import from `./src/core`.
    * @param url Requested resource.
    * @param handler Function to define the behavior of the route.
    */
-  public register(method: HTTP, url: string, handler: TRoutehandler) {
+  public register(
+    method: HTTP,
+    url: string,
+    handler: TRoutehandler,
+    middlewares: TYaloMiddelware = [],
+  ) {
     const routeHash = quickHash(`${method}-${url}`);
-    this.routes.set(routeHash, { url, handler, method });
+    this.routes.set(routeHash, {
+      url,
+      handler,
+      method,
+      middlewares: [...this.branchMiddlewares, ...middlewares],
+    });
   }
 
   /**
@@ -76,7 +108,8 @@ export class Yalo {
    * @param url Requested resource.
    * @param branch a nested route dispatcher (idk what that means).
    */
-  public plug(url: string, branch: Branch) {
+  // TODO: may be rename this to mount
+  public mount(url: string, branch: Branch) {
     branch.prefixUrlWith(url, this);
   }
 
@@ -90,11 +123,18 @@ export class Yalo {
     const server = net.createServer((socket) => {
       socket.on("data", (rawBuffer) => {
         const request = new YaloRequest(rawBuffer);
-        const handler = this.getCurrentRoutesHandler(request);
+        const response = new YaloResponse();
+        const { handler, middlewares } = this.getCurrentRouteInfo(request);
+        if (this.globalMiddlewares.length) {
+          console.log(this.globalMiddlewares);
+          this.globalMiddlewares.map((each) => each(request, response));
+        }
+        if (middlewares.length) {
+          middlewares.map((each) => each(request, response));
+        }
+        const writable = handler(request, new YaloResponse());
 
-        const response = handler(request, new YaloResponse());
-
-        socket.write(response);
+        socket.write(writable);
         socket.end();
       });
     });

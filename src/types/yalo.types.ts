@@ -2,7 +2,16 @@ import { YaloRequest, YaloResponse } from "src/core";
 
 export type TRoutehandler = (req: YaloRequest, res: YaloResponse) => any;
 
-export type TRouteDefinition = { url: string; handler: TRoutehandler; method: string };
+export type TMiddlewarehandler = (req: YaloRequest, res: YaloResponse) => any;
+
+export type TYaloMiddelware = Array<TMiddlewarehandler>;
+
+export type TRouteDefinition = {
+  url: string;
+  handler: TRoutehandler;
+  method: string;
+  middlewares: TYaloMiddelware;
+};
 
 export type TYaloRoutes = Map<string, TRouteDefinition>;
 

@@ -3,16 +3,38 @@ import { HTTP } from "./src/core/@yalo_common";
 
 async function bootstrap() {
   const app = await Yalo.create();
+  const authBranch = new Branch();
 
-  const branch = new Branch();
-  branch.register(HTTP.GET, "/page", (req: YaloRequest, res: YaloResponse) => {
-    return res.send("This is a nested router");
-  });
+  app.gwire([
+    (_req: YaloRequest, _res: YaloResponse) => {
+      console.log("Root middleware");
+    },
+  ]);
 
-  app.register(HTTP.GET, "/", (req: YaloRequest, res: YaloResponse) => {
+  app.register(HTTP.GET, "/", (_req: YaloRequest, res: YaloResponse) => {
     return res.send("hello world, this is test route");
   });
-  app.plug("/home", branch);
+
+  authBranch
+    .wire([
+      (_req: YaloRequest, _res: YaloResponse) => {
+        console.log("First middleware");
+      },
+    ])
+    .register(
+      HTTP.GET,
+      "/user",
+      (_req: YaloRequest, res: YaloResponse) => {
+        return res.send("This authBranch deals with user auth.");
+      },
+      [
+        (_req: YaloRequest, _res: YaloResponse) => {
+          console.log("Second middelware");
+        },
+      ],
+    );
+
+  app.mount("/auth", authBranch);
 
   app.listen(8000, undefined, () => {
     console.log("Hello world server running @ http://localhost:8000/");
