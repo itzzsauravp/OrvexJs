@@ -2,13 +2,13 @@ import net from "node:net";
 import { quickHash } from "../helpers/general.helper";
 import {
   TRoutehandler,
-  HTTP,
   TYaloRoutes,
   TRouteDefinition,
   TYaloMiddelware,
   TYaloAppOptions,
-} from "../core/@yalo_common";
+} from "./@yalo_types";
 import { YaloRequest, YaloResponse, Branch } from ".";
+import { HTTP } from "./@yalo_enums";
 
 export class Yalo {
   /**
@@ -16,7 +16,15 @@ export class Yalo {
    */
   private routes: TYaloRoutes = new Map<string, TRouteDefinition>();
 
+  // FIX: one branch one set of middleware.
+  /**
+   * An array of middlewares intended for specific branch.
+   */
   private branchMiddlewares: TYaloMiddelware = [];
+
+  /**
+   * An array of middlewares intended for all the routes.
+   */
   private globalMiddlewares: TYaloMiddelware = [];
 
   constructor(private readonly options?: TYaloAppOptions) {
@@ -24,7 +32,7 @@ export class Yalo {
   }
 
   /**
-   * Retrieves the registered handler for the current incoming request.
+   * Gets the registered handler for the current incoming request.
    * * @param request - An instance of the YaloRequest.
    * @returns The route handler that is associated with the current request.
    * @throws {Error} Throws error indicating which method and url was not found.
@@ -33,6 +41,9 @@ export class Yalo {
     const route_hash = quickHash(`${request.method}-${request.url}`);
     const routeInfo = this.routes.get(route_hash);
 
+    // TODO: fix the url thing, this breaks when using browser,
+    // also need to handle the case for dynamic routes, GET user/1 and GET user/2 would be same 2 routes in this case,
+    // have to use regex or trie trees some bs like that to make it work
     if (!routeInfo.url) {
       throw new Error(`[Yalo] Route not found: ${request.method} ${request.url}`);
     }
@@ -41,7 +52,7 @@ export class Yalo {
   }
 
   /**
-   *  This method takes the nested route handlers and attaches them to the main app routes.
+   * Merges the branch routes with global app routes.
    * @param branchedRoutes Nested route handlers.
    */
   public mergeWithGlobalRoute(branchedRoutes: TYaloRoutes) {
@@ -57,11 +68,8 @@ export class Yalo {
   }
 
   /**
-   * Creates a instance of new Yalo app along with a hasher.
+   * Creates a instance of new Yalo app.
    *
-   * The hasher is used for creating hash map of the registed routes
-   *
-   * Example: `Map({<hash_value>: <http_method>-<requested_url>})`.
    * @returns An instance of the Yalo app.
    */
   public static async create() {
@@ -70,8 +78,8 @@ export class Yalo {
   }
 
   /**
-   *  This method is mainly intended to use with Branch() or Yalo.create() instances to add middlewares to them ( can be used interchangeably with `.guard` method but `not recommended` )
-   * @param middlewares Array of middleware of type TYaloMiddelware
+   * Register an array of middleware to the current instance (could be the root app or a branch).
+   * @param middlewares Array of middleware of type TYaloMiddelware.
    * @returns
    */
   public wire(middlewares: TYaloMiddelware): Yalo {
@@ -79,13 +87,15 @@ export class Yalo {
     if (this.options.isRoot) {
       this.globalMiddlewares = [...this.globalMiddlewares, ...middlewares];
     } else {
+      // TODO: probably have to deal with which sets of middleware for which branch problem here
+      // every created branch will share a single common branchMiddleware
       this.branchMiddlewares = [...this.branchMiddlewares, ...middlewares];
     }
     return this;
   }
 
   /**
-   *
+   * Registers a route to the current instance (could be the root app or a branch).
    * @param method HTTP methods like 'GET', 'POST' etc, import from `./src/core`.
    * @param url Requested resource.
    * @param handler Function to define the behavior of the route.
@@ -106,7 +116,7 @@ export class Yalo {
   }
 
   /**
-   *
+   * Registers a branch to the root app with a prefixed `url`.
    * @param url Requested resource.
    * @param branch a nested route dispatcher (idk what that means).
    */
@@ -116,7 +126,7 @@ export class Yalo {
   }
 
   /**
-   *
+   * Listens to a specified `port` and `_interface`.
    * @param port PORT number to listen to.
    * @param _interface Interface to listen to '127.0.0.1' by default.
    * @param callback Function to define some behavior right after server starts.

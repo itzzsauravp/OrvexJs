@@ -3,7 +3,14 @@
   "version": "1.0.0",
   "description": "yalo - Yet Another Listener Object",
   "license": "MIT",
-  "author": "Saurav Parajulee",
+  "author": {
+    "name": "Saurav Parajulee",
+    "email": "social.saurav2003@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/itzzsauravp/yalo.git"
+  },
   "type": "commonjs",
   "main": "yalo.js",
   "scripts": {
@@ -14,12 +21,6 @@
     "yalo": "npx ts-node ./src/example/server.ts",
     "prepare": "husky"
   },
-  "lint-staged": {
-    "*.{ts,js}": [
-      "oxlint --deny-warnings",
-      "oxfmt --write"
-    ]
-  },
   "devDependencies": {
     "@types/node": "^25.3.0",
     "husky": "^9.1.7",
@@ -29,5 +30,11 @@
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
+  },
+  "lint-staged": {
+    "*.{ts,js}": [
+      "oxlint --deny-warnings",
+      "oxfmt --write"
+    ]
   }
 }

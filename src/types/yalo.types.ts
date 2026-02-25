@@ -18,12 +18,3 @@ export type TYaloRoutes = Map<string, TRouteDefinition>;
 export type TYaloAppOptions = {
   isRoot: boolean;
 };
-
-export enum HTTP {
-  GET = "GET",
-  POST = "POST",
-  PUT = "PUT",
-  PATCH = "PATCH",
-  DELETE = "DELETE",
-  OPTIONS = "OPTIONS",
-}
