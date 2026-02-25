@@ -1,0 +1,27 @@
+{
+  "name": "yalo",
+  "version": "1.0.0",
+  "description": "yalo - Yet Another Listener Object",
+  "license": "MIT",
+  "author": "Saurav Parajulee",
+  "type": "commonjs",
+  "main": "yalo.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "oxlint",
+    "format": "oxfmt src",
+    "lint:fix": "oxlint --fix",
+    "yalo": "npx ts-node ./index.ts"
+  },
+  "dependencies": {
+    "xxhash-wasm": "^1.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.0",
+    "oxfmt": "^0.35.0",
+    "oxlint": "^1.50.0",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}
