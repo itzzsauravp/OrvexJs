@@ -11,7 +11,7 @@
     "lint": "oxlint",
     "format": "oxfmt src",
     "lint:fix": "oxlint --fix",
-    "yalo": "npx ts-node ./index.ts",
+    "yalo": "npx ts-node ./src/example/server.ts",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -19,9 +19,6 @@
       "oxlint --deny-warnings",
       "oxfmt --write"
     ]
-  },
-  "dependencies": {
-    "xxhash-wasm": "^1.1.0"
   },
   "devDependencies": {
     "@types/node": "^25.3.0",

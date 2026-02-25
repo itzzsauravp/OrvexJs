@@ -1,9 +1,9 @@
-import { quickHash } from "../helpers/hashGenerator";
+import { quickHash } from "../helpers/general.helper";
 import { Yalo } from ".";
 
 export class Branch extends Yalo {
   constructor() {
-    super();
+    super({ isRoot: false });
   }
 
   /**
@@ -16,7 +16,7 @@ export class Branch extends Yalo {
 
     const updatedRoutesWithPrefix = new Map(
       [...routes].map(([_key, value]) => {
-        const newUrl = `${url}${value.url}`; // need a method here
+        const newUrl = `${url}${value.url}`;
         value.url = newUrl;
         const routeHash = quickHash(`${value.method}-${newUrl}`);
         return [routeHash, value];

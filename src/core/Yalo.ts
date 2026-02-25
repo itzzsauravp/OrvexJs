@@ -1,11 +1,12 @@
 import net from "node:net";
-import { initHasher, quickHash } from "../helpers/hashGenerator";
+import { quickHash } from "../helpers/general.helper";
 import {
   TRoutehandler,
   HTTP,
   TYaloRoutes,
   TRouteDefinition,
   TYaloMiddelware,
+  TYaloAppOptions,
 } from "../core/@yalo_common";
 import { YaloRequest, YaloResponse, Branch } from ".";
 
@@ -18,7 +19,9 @@ export class Yalo {
   private branchMiddlewares: TYaloMiddelware = [];
   private globalMiddlewares: TYaloMiddelware = [];
 
-  constructor() {}
+  constructor(private readonly options?: TYaloAppOptions) {
+    this.options = options;
+  }
 
   /**
    * Retrieves the registered handler for the current incoming request.
@@ -56,14 +59,13 @@ export class Yalo {
   /**
    * Creates a instance of new Yalo app along with a hasher.
    *
-   * The hasher is used for creating hash map of the incoming request.
+   * The hasher is used for creating hash map of the registed routes
+   *
    * Example: `Map({<hash_value>: <http_method>-<requested_url>})`.
    * @returns An instance of the Yalo app.
    */
   public static async create() {
-    const instance = new Yalo();
-    // TODO: need to move this out of here, should happen when the instance itself is created.
-    await initHasher();
+    const instance = new Yalo({ isRoot: true });
     return instance;
   }
 
@@ -73,13 +75,13 @@ export class Yalo {
    * @returns
    */
   public wire(middlewares: TYaloMiddelware): Yalo {
-    //TODO: check instance and then add middleware to branch or global
-    this.branchMiddlewares = [...this.branchMiddlewares, ...middlewares];
+    // TODO: find a better way to do this.
+    if (this.options.isRoot) {
+      this.globalMiddlewares = [...this.globalMiddlewares, ...middlewares];
+    } else {
+      this.branchMiddlewares = [...this.branchMiddlewares, ...middlewares];
+    }
     return this;
-  }
-
-  public gwire(middelware: TYaloMiddelware) {
-    this.globalMiddlewares = [...this.globalMiddlewares, ...middelware];
   }
 
   /**
@@ -126,7 +128,6 @@ export class Yalo {
         const response = new YaloResponse();
         const { handler, middlewares } = this.getCurrentRouteInfo(request);
         if (this.globalMiddlewares.length) {
-          console.log(this.globalMiddlewares);
           this.globalMiddlewares.map((each) => each(request, response));
         }
         if (middlewares.length) {
