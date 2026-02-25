@@ -4,14 +4,13 @@ import { TRoutehandler, HTTP, TYaloRoutes, TRouteDefinition } from "../core/@yal
 import { YaloRequest, YaloResponse, Branch } from ".";
 
 export class Yalo {
-
   /**
    * A data structure to hold all the routes registered to the app.
    */
   private routes: TYaloRoutes = new Map<string, TRouteDefinition>();
 
-  constructor(private readonly mode: 'dev' | 'prod' = "dev") {
-    this.mode = mode
+  constructor(private readonly mode: "dev" | "prod" = "dev") {
+    this.mode = mode;
   }
 
   /**
@@ -40,11 +39,11 @@ export class Yalo {
   }
 
   /**
-   * 
+   *
    * @returns A new map for all the registered routes.
    */
   public getRoutes() {
-    return new Map(this.routes)
+    return new Map(this.routes);
   }
 
   /**
@@ -62,7 +61,7 @@ export class Yalo {
   }
 
   /**
-   * 
+   *
    * @param method HTTP methods like 'GET', 'POST' etc, import from `./src/core`.
    * @param url Requested resource.
    * @param handler Function to define the behavior of the route.
@@ -73,7 +72,7 @@ export class Yalo {
   }
 
   /**
-   * 
+   *
    * @param url Requested resource.
    * @param branch a nested route dispatcher (idk what that means).
    */
@@ -82,7 +81,7 @@ export class Yalo {
   }
 
   /**
-   * 
+   *
    * @param port PORT number to listen to.
    * @param _interface Interface to listen to '127.0.0.1' by default.
    * @param callback Function to define some behavior right after server starts.
