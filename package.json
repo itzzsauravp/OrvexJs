@@ -11,13 +11,22 @@
     "lint": "oxlint",
     "format": "oxfmt src",
     "lint:fix": "oxlint --fix",
-    "yalo": "npx ts-node ./index.ts"
+    "yalo": "npx ts-node ./index.ts",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,js}": [
+      "oxlint --deny-warnings",
+      "oxfmt --write"
+    ]
   },
   "dependencies": {
     "xxhash-wasm": "^1.1.0"
   },
   "devDependencies": {
     "@types/node": "^25.3.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
     "oxfmt": "^0.35.0",
     "oxlint": "^1.50.0",
     "ts-node": "^10.9.2",
