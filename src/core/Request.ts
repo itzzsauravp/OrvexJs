@@ -96,6 +96,10 @@ export class YaloRequest {
     return this.requestObject.params;
   }
 
+  set params(val: Record<string, string>) {
+    this.requestObject.params = { ...this.requestObject.params, ...val };
+  }
+
   get cookie() {
     return this.requestObject.cookie;
   }

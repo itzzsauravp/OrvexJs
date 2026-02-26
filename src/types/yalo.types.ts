@@ -31,3 +31,9 @@ export type TYaloAppOptions = {
 export type TPicoOptions = {
   type: LogLevel;
 };
+
+export type TYaloDynamicRoutes = Array<{
+  segments: string[];
+  paramNames: string[];
+  definition: TRouteDefinition;
+}>;

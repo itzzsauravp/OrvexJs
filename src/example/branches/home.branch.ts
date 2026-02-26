@@ -6,6 +6,6 @@ import { getHomeInfoHandler } from "../handlers/home.handler";
 const homeBranch = new Branch();
 homeBranch.wire([greetLogger]);
 
-homeBranch.register(HTTP.GET, "/info", getHomeInfoHandler);
+homeBranch.register(HTTP.GET, "/$id", getHomeInfoHandler);
 
 export default homeBranch;

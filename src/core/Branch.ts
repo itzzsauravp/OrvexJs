@@ -12,16 +12,23 @@ export class Branch extends Yalo {
    * @param yaloInstance Instance of the main Yalo app.
    */
   public prefixUrlWith(url: string, yaloInstance: Yalo) {
-    const routes = this.getRoutes();
+    const staticRoutes = this.getStaticRoutes();
 
-    const updatedRoutesWithPrefix = new Map(
-      [...routes].map(([_key, value]) => {
+    const updatedStatic = new Map(
+      [...staticRoutes].map(([_key, value]) => {
         const newUrl = `${url}${value.url}`;
         value.url = newUrl;
         const routeHash = quickHash(`${value.method}-${newUrl}`);
         return [routeHash, value];
       }),
     );
-    yaloInstance.mergeWithGlobalRoute(updatedRoutesWithPrefix);
+
+    const updatedDyamic = this.getDynamicRoutes().map((route) => ({
+      ...route,
+      segments: [...url.split("/").filter(Boolean), ...route.segments],
+      definition: { ...route.definition, url: `${url}${route.definition.url}` },
+    }));
+
+    yaloInstance.mergeWithGlobalRoute(updatedStatic, updatedDyamic);
   }
 }

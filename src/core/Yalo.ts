@@ -1,15 +1,23 @@
 import net from "node:net";
 import { quickHash } from "../helpers/general.helper";
-import { TRoutehandler, TYaloRoutes, TRouteDefinition, TYaloAppOptions } from "./@yalo_types";
+import {
+  TRoutehandler,
+  TYaloRoutes,
+  TRouteDefinition,
+  TYaloAppOptions,
+  TYaloDynamicRoutes,
+} from "./@yalo_types";
 import { YaloRequest, YaloResponse, Branch } from ".";
 import { HTTP } from "./@yalo_enums";
 import { Middleware } from "./Middleware";
 
 export class Yalo {
   /**
-   * A data structure to hold all the routes registered to the app.
+   * A data structure to hold all the `static` routes registered to the app.
    */
-  private routes: TYaloRoutes = new Map<string, TRouteDefinition>();
+  private staticRoutes: TYaloRoutes = new Map<string, TRouteDefinition>();
+
+  private dynamicRoutes: TYaloDynamicRoutes = [];
 
   // FIX: one branch one set of middleware.
   /**
@@ -30,35 +38,71 @@ export class Yalo {
    * @returns The route handler that is associated with the current request.
    * @throws {Error} Throws error indicating which method and url was not found.
    */
-  private getCurrentRouteInfo(request: YaloRequest): TRouteDefinition {
-    const route_hash = quickHash(`${request.method}-${request.url}`);
-    const routeInfo = this.routes.get(route_hash);
+  private getCurrentRouteInfo(
+    request: YaloRequest,
+  ): TRouteDefinition & { extractedParams: Record<string, string> } {
+    // TODO: reivew this claudes magic later
+    const cleanUrl = request.url.split("?")[0];
+    const routeHash = quickHash(`${request.method}-${cleanUrl}`);
+    const staticMatch = this.staticRoutes.get(routeHash);
 
-    // TODO: fix the url thing, this breaks when using browser,
-    /*
-      parse the url again and test for routes 
-     */
-    if (!routeInfo.url) {
-      throw new Error(`[Yalo] Route not found: ${request.method} ${request.url}`);
+    if (staticMatch) {
+      return { ...staticMatch, extractedParams: {} };
     }
 
-    return routeInfo;
+    const incomingSegments = cleanUrl.split("/").filter(Boolean);
+    for (const route of this.dynamicRoutes) {
+      if (route.definition.method !== request.method) continue;
+      if (route.segments.length !== incomingSegments.length) continue;
+
+      const params: Record<string, string> = {};
+      let matched = true;
+
+      for (let i = 0; i < route.segments.length; i++) {
+        const routeSegement = route.segments[i];
+        const incomingSegment = incomingSegments[i];
+
+        if (routeSegement.startsWith("$")) {
+          const paramName = routeSegement.slice(1);
+          params[paramName] = incomingSegment;
+        } else if (routeSegement !== incomingSegment) {
+          matched = false;
+          break;
+        }
+      }
+      if (matched) {
+        return { ...route.definition, extractedParams: params };
+      }
+    }
+    throw new Error(`[Yalo] Route not found: ${request.method} ${request.url}`);
   }
 
   /**
    * Merges the branch routes with global app routes.
    * @param branchedRoutes Nested route handlers.
    */
-  public mergeWithGlobalRoute(branchedRoutes: TYaloRoutes) {
-    this.routes = new Map([...this.routes, ...branchedRoutes]);
+  public mergeWithGlobalRoute(
+    branchedRoutes: TYaloRoutes,
+    branchedDynamicRoutes: typeof this.dynamicRoutes = [],
+  ) {
+    this.staticRoutes = new Map([...this.staticRoutes, ...branchedRoutes]);
+    this.dynamicRoutes = [...this.dynamicRoutes, ...branchedDynamicRoutes];
   }
 
   /**
    *
-   * @returns A new map for all the registered routes.
+   * @returns A new map for all the registered static routes.
    */
-  public getRoutes() {
-    return new Map(this.routes);
+  public getStaticRoutes() {
+    return new Map(this.staticRoutes);
+  }
+
+  /**
+   *
+   * @returns A array for all the registered dynamic routes.
+   */
+  public getDynamicRoutes() {
+    return [...this.dynamicRoutes];
   }
 
   /**
@@ -100,18 +144,20 @@ export class Yalo {
     handler: TRoutehandler,
     middlewares: Array<TRoutehandler> = [],
   ) {
-    // TODO: Make a compressed trie (radix tree)
-    /*
-      for the url here, the url needs to be a parsed form (with the :id or any of the path param)
-      goto: getCurrentRouteInfo 
-     */
-    const routeHash = quickHash(`${method}-${url}`);
-    this.routes.set(routeHash, {
+    const definition: TRouteDefinition = {
       url,
       handler,
       method,
       middlewares: [...this.branchMiddlewares, ...middlewares],
-    });
+    };
+
+    if (url.includes("$")) {
+      const segments = url.split("/").filter(Boolean);
+      const paramNames = segments.filter((s) => s.startsWith("$")).map((s) => s.slice(1));
+      this.dynamicRoutes.push({ segments, paramNames, definition });
+    }
+    const routeHash = quickHash(`${method}-${url}`);
+    this.staticRoutes.set(routeHash, definition);
   }
 
   /**
@@ -136,15 +182,19 @@ export class Yalo {
         const request = new YaloRequest(rawBuffer);
         const response = new YaloResponse(socket);
 
-        const { handler, middlewares } = this.getCurrentRouteInfo(request);
+        const { handler, middlewares, extractedParams } = this.getCurrentRouteInfo(request);
+        request.params = extractedParams;
+
         const chain = [...this.globalMiddlewares, ...middlewares, handler];
+
         const pipeline = new Middleware(chain);
         pipeline.exeMiddlewarePipeline(request, response);
       });
     });
 
     server.listen(port, _interface);
-    console.log(this.getRoutes());
+    console.log("Static Routes:", this.getStaticRoutes());
+    console.log("Dynamic Routes:", this.getDynamicRoutes());
     callback();
   }
 }
