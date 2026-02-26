@@ -1,12 +1,6 @@
 import net from "node:net";
 import { quickHash } from "../helpers/general.helper";
-import {
-  TRoutehandler,
-  TYaloRoutes,
-  TRouteDefinition,
-  TYaloMiddelware,
-  TYaloAppOptions,
-} from "./@yalo_types";
+import { TRoutehandler, TYaloRoutes, TRouteDefinition, TYaloAppOptions } from "./@yalo_types";
 import { YaloRequest, YaloResponse, Branch } from ".";
 import { HTTP } from "./@yalo_enums";
 import { Middleware } from "./Middleware";
@@ -21,12 +15,12 @@ export class Yalo {
   /**
    * An array of middlewares intended for specific branch.
    */
-  private branchMiddlewares: TYaloMiddelware = [];
+  private branchMiddlewares: Array<TRoutehandler> = [];
 
   /**
    * An array of middlewares intended for all the routes.
    */
-  private globalMiddlewares: TYaloMiddelware = [];
+  private globalMiddlewares: Array<TRoutehandler> = [];
 
   constructor(private readonly options?: TYaloAppOptions) {}
 
@@ -41,8 +35,9 @@ export class Yalo {
     const routeInfo = this.routes.get(route_hash);
 
     // TODO: fix the url thing, this breaks when using browser,
-    // also need to handle the case for dynamic routes, GET user/1 and GET user/2 would be same 2 routes in this case,
-    // have to use regex or trie trees some bs like that to make it work
+    /*
+      parse the url again and test for routes 
+     */
     if (!routeInfo.url) {
       throw new Error(`[Yalo] Route not found: ${request.method} ${request.url}`);
     }
@@ -78,10 +73,10 @@ export class Yalo {
 
   /**
    * Register an array of middleware to the current instance (could be the root app or a branch).
-   * @param middlewares Array of middleware of type TYaloMiddelware.
+   * @param middlewares Array of middleware of type Array<TRoutehandler>.
    * @returns
    */
-  public wire(middlewares: TYaloMiddelware): Yalo {
+  public wire(middlewares: Array<TRoutehandler>): Yalo {
     // TODO: find a better way to do this.
     if (this.options.isRoot) {
       this.globalMiddlewares = [...this.globalMiddlewares, ...middlewares];
@@ -103,8 +98,13 @@ export class Yalo {
     method: HTTP,
     url: string,
     handler: TRoutehandler,
-    middlewares: TYaloMiddelware = [],
+    middlewares: Array<TRoutehandler> = [],
   ) {
+    // TODO: Make a compressed trie (radix tree)
+    /*
+      for the url here, the url needs to be a parsed form (with the :id or any of the path param)
+      goto: getCurrentRouteInfo 
+     */
     const routeHash = quickHash(`${method}-${url}`);
     this.routes.set(routeHash, {
       url,
@@ -134,23 +134,12 @@ export class Yalo {
     const server = net.createServer((socket) => {
       socket.on("data", (rawBuffer) => {
         const request = new YaloRequest(rawBuffer);
-        const response = new YaloResponse();
+        const response = new YaloResponse(socket);
 
         const { handler, middlewares } = this.getCurrentRouteInfo(request);
-
-        if (this.globalMiddlewares.length) {
-          const globalMiddlewareInstance = new Middleware(this.globalMiddlewares);
-          globalMiddlewareInstance.exeMiddlewarePipeline(request, response);
-        }
-
-        if (middlewares.length) {
-          const localMiddlewareInstace = new Middleware(middlewares);
-          localMiddlewareInstace.exeMiddlewarePipeline(request, response);
-        }
-
-        const writable = handler(request, new YaloResponse());
-        socket.write(writable);
-        socket.end();
+        const chain = [...this.globalMiddlewares, ...middlewares, handler];
+        const pipeline = new Middleware(chain);
+        pipeline.exeMiddlewarePipeline(request, response);
       });
     });
 

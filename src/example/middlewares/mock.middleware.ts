@@ -41,4 +41,5 @@ export function healthLogger(_req: YaloRequest, _res: YaloResponse) {
   console.log(`Heap:      ${toMB(memUsage.heapUsed)}MB / ${toMB(memUsage.heapTotal)}MB`);
   console.log(`External:  ${toMB(memUsage.external)}MB (C++ objects)`);
   console.log("-------------------------------\n");
+  throw new Error("something happening");
 }

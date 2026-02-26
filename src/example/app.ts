@@ -15,7 +15,7 @@ export async function bootstrap() {
       return res
         .code(YaloStatus.OK)
         .setHeaders({ Connection: "Keep-Alive", "Content-Type": "text/html" })
-        .relay("<h1>hello world</h1>");
+        .relay(`<h1>hello world ${new Date()}</h1>`);
     },
     [healthLogger, greetLogger],
   );
