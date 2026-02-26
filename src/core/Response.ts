@@ -1,3 +1,4 @@
+import net from "node:net";
 import { YaloStatus } from "./@yalo_enums";
 
 export class YaloResponse {
@@ -5,7 +6,7 @@ export class YaloResponse {
   private headers: Record<string, string> = {
     "Content-Type": "text/plain",
   };
-  constructor() {}
+  constructor(private readonly socket: net.Socket) {}
 
   /**
    * This method sets the status code for response.
@@ -32,7 +33,7 @@ export class YaloResponse {
    * @param data Data to send over to client.
    * @returns
    */
-  public relay(data: any): string {
+  public relay(data: any): void {
     let body = data;
 
     if (typeof data === "object" && data !== null) {
@@ -51,6 +52,7 @@ export class YaloResponse {
       .join("\r\n");
 
     const response = `HTTP/1.1 ${this.status} ${statusMessage}\r\n${headerString}\r\n\r\n${body}`;
-    return response;
+    this.socket.write(response);
+    this.socket.end();
   }
 }
