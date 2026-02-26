@@ -43,4 +43,8 @@ export class PicoWrapper {
   public bgCyan(message: string) {
     return pc.bgCyan(message);
   }
+
+  public bgRed(message: string) {
+    return pc.bgRed(message);
+  }
 }
