@@ -1,4 +1,4 @@
-import { HTTP } from "../../enums/yalo.enums";
+import { HTTP } from "../../core/@yalo_enums";
 import { Branch } from "../../core";
 import { loginHandler } from "../handlers/auth.handler";
 import { authLogger } from "../middlewares/mock.middleware";

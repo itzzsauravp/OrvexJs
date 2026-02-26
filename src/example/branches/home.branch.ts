@@ -1,4 +1,4 @@
-import { HTTP } from "../../enums/yalo.enums";
+import { HTTP } from "../../core/@yalo_enums";
 import { Branch } from "../../core";
 import { greetLogger } from "../middlewares/mock.middleware";
 import { getHomeInfoHandler } from "../handlers/home.handler";

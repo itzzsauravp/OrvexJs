@@ -1,4 +1,4 @@
-import { HTTP, YaloStatus } from "../enums/yalo.enums";
+import { HTTP, YaloStatus } from "../core/@yalo_enums";
 import { Yalo, YaloResponse } from "../core";
 import authBranch from "./branches/auth.branch";
 import { greetLogger, healthLogger, requestLogger } from "./middlewares/mock.middleware";

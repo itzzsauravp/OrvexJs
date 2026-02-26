@@ -1,5 +1,5 @@
 import { YaloRequest, YaloResponse } from "../core";
-import { LogLevel } from "src/enums/yalo.enums";
+import { LogLevel } from "../core/@yalo_enums";
 
 export type TRoutehandler = (
   req: YaloRequest,
@@ -37,3 +37,23 @@ export type TYaloDynamicRoutes = Array<{
   paramNames: string[];
   definition: TRouteDefinition;
 }>;
+
+export type PicoColor =
+  | "red"
+  | "green"
+  | "blue"
+  | "yellow"
+  | "cyan"
+  | "magenta"
+  | "white"
+  | "black"
+  | "gray";
+export type PicoBgColor =
+  | "bgRed"
+  | "bgGreen"
+  | "bgBlue"
+  | "bgYellow"
+  | "bgCyan"
+  | "bgMagenta"
+  | "bgWhite"
+  | "bgBlack";
