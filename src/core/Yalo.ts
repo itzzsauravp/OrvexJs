@@ -9,6 +9,7 @@ import {
 } from "./@yalo_types";
 import { YaloRequest, YaloResponse, Branch } from ".";
 import { HTTP } from "./@yalo_enums";
+import { Middleware } from "./Middleware";
 
 export class Yalo {
   /**
@@ -27,9 +28,7 @@ export class Yalo {
    */
   private globalMiddlewares: TYaloMiddelware = [];
 
-  constructor(private readonly options?: TYaloAppOptions) {
-    this.options = options;
-  }
+  constructor(private readonly options?: TYaloAppOptions) {}
 
   /**
    * Gets the registered handler for the current incoming request.
@@ -136,15 +135,20 @@ export class Yalo {
       socket.on("data", (rawBuffer) => {
         const request = new YaloRequest(rawBuffer);
         const response = new YaloResponse();
-        const { handler, middlewares } = this.getCurrentRouteInfo(request);
-        if (this.globalMiddlewares.length) {
-          this.globalMiddlewares.map((each) => each(request, response));
-        }
-        if (middlewares.length) {
-          middlewares.map((each) => each(request, response));
-        }
-        const writable = handler(request, new YaloResponse());
 
+        const { handler, middlewares } = this.getCurrentRouteInfo(request);
+
+        if (this.globalMiddlewares.length) {
+          const globalMiddlewareInstance = new Middleware(this.globalMiddlewares);
+          globalMiddlewareInstance.exeMiddlewarePipeline(request, response);
+        }
+
+        if (middlewares.length) {
+          const localMiddlewareInstace = new Middleware(middlewares);
+          localMiddlewareInstace.exeMiddlewarePipeline(request, response);
+        }
+
+        const writable = handler(request, new YaloResponse());
         socket.write(writable);
         socket.end();
       });

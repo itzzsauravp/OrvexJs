@@ -1,8 +1,15 @@
-import { YaloRequest, YaloResponse } from "src/core";
+import { YaloRequest, YaloResponse } from "../core";
+import { LogLevel } from "src/enums/yalo.enums";
 
 export type TRoutehandler = (req: YaloRequest, res: YaloResponse) => any;
 
-export type TMiddlewarehandler = (req: YaloRequest, res: YaloResponse) => void;
+export type DelegateFunction = () => void | Promise<void>;
+
+export type TMiddlewarehandler = (
+  req: YaloRequest,
+  res: YaloResponse,
+  delegate: DelegateFunction,
+) => void;
 
 export type TYaloMiddelware = Array<TMiddlewarehandler>;
 
@@ -17,4 +24,8 @@ export type TYaloRoutes = Map<string, TRouteDefinition>;
 
 export type TYaloAppOptions = {
   isRoot: boolean;
+};
+
+export type TPicoOptions = {
+  type: LogLevel;
 };

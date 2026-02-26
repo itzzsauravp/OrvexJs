@@ -21,6 +21,9 @@
     "yalo": "npx ts-node ./src/example/server.ts",
     "prepare": "husky"
   },
+  "dependencies": {
+    "picocolors": "^1.1.1"
+  },
   "devDependencies": {
     "@types/node": "^25.3.0",
     "husky": "^9.1.7",

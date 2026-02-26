@@ -1,17 +1,22 @@
 import os from "node:os";
 import { YaloRequest, YaloResponse } from "../../core";
 
-export function authLogger(req: YaloRequest, res: YaloResponse) {
+export function authLogger(req: YaloRequest, _res: YaloResponse) {
   const time = new Date();
   const body = req.body;
   console.log(`Login Credentails: ${JSON.stringify(body)} @ Time: ${time}`);
 }
 
-export function requestLogger(req: YaloRequest, res: YaloResponse) {
+export function greetLogger(_req: YaloRequest, _res: YaloResponse) {
+  console.log(`Hi there dear user, This is a greeter logger`);
+}
+
+export function requestLogger(req: YaloRequest, _res: YaloResponse) {
   const time = new Date();
   const url = req.url;
   console.log(`Accessing: ${url} @ Time: ${time}`);
 }
+
 export function healthLogger(_req: YaloRequest, _res: YaloResponse) {
   const totalMem = os.totalmem();
   const freeMem = os.freemem();

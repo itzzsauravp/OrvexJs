@@ -28,3 +28,9 @@ export enum YaloStatus {
   BAD_GATEWAY = 502,
   SERVICE_UNAVAILABLE = 503,
 }
+
+export enum LogLevel {
+  ERROR = "error",
+  WARN = "warn",
+  LOG = "log",
+}
