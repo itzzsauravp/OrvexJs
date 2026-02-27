@@ -1,7 +1,7 @@
 import { quickHash } from "../helpers/general.helper";
-import { Yalo } from ".";
+import { Orvex } from ".";
 
-export class Branch extends Yalo {
+export class OrvexBranch extends Orvex {
   constructor() {
     super({ isRoot: false });
   }
@@ -9,9 +9,9 @@ export class Branch extends Yalo {
   /**
    *
    * @param url A prefix for the nested route handlers.
-   * @param yaloInstance Instance of the main Yalo app.
+   * @param orvexInstance Instance of the main Orvex app.
    */
-  public prefixUrlWith(url: string, yaloInstance: Yalo) {
+  public prefixUrlWith(url: string, orvexInstance: Orvex) {
     const staticRoutes = this.getStaticRoutes();
 
     const updatedStatic = new Map(
@@ -29,6 +29,6 @@ export class Branch extends Yalo {
       definition: { ...route.definition, url: `${url}${route.definition.url}` },
     }));
 
-    yaloInstance.mergeWithGlobalRoute(updatedStatic, updatedDyamic);
+    orvexInstance.mergeWithGlobalRoute(updatedStatic, updatedDyamic);
   }
 }

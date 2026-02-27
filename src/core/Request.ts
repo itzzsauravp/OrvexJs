@@ -1,7 +1,7 @@
 import { cookieParser } from "../parsers/cookie.parser";
 import { jsonParser } from "../parsers/json.parser";
 
-interface IYaloRequest {
+interface IOrvexRequest {
   method: string;
   url: string;
   version: string;
@@ -11,8 +11,8 @@ interface IYaloRequest {
   cookie: any;
 }
 
-export class YaloRequest {
-  private requestObject: IYaloRequest;
+export class OrvexRequest {
+  private requestObject: IOrvexRequest;
 
   constructor(private rawRequest: string | Buffer<ArrayBufferLike>) {
     const parsedRequest = String(this.rawRequest).split("\r\n");

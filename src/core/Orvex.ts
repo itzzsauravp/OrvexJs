@@ -2,25 +2,25 @@ import net from "node:net";
 import { quickHash } from "../helpers/general.helper";
 import {
   TRoutehandler,
-  TYaloRoutes,
+  TOrvexStaticRoute,
   TRouteDefinition,
-  TYaloAppOptions,
-  TYaloDynamicRoutes,
-} from "./@yalo_types";
-import { YaloRequest, YaloResponse, Branch } from ".";
-import { HTTP } from "./@yalo_enums";
-import { Middleware } from "./Middleware";
-import { JUNK_ROUTES } from "../constants";
+  TOrvexAppOption,
+  TOrvexDynamicRoute,
+} from "./@orvex_types";
+import { OrvexBranch, OrvexRequest, OrvexResponse } from ".";
+import { HTTP } from "./@orvex_enums";
+import { OrvexMiddleware } from "./Middleware";
+import { JUNK_ROUTES } from "./@orvex_constants";
 
-export class Yalo {
-  constructor(private readonly options?: TYaloAppOptions) {}
+export class Orvex {
+  constructor(private readonly options?: TOrvexAppOption) {}
 
   /**
    * A data structure to hold all the `static` routes registered to the app.
    */
-  private staticRoutes: TYaloRoutes = new Map<string, TRouteDefinition>();
+  private staticRoutes: TOrvexStaticRoute = new Map<string, TRouteDefinition>();
 
-  private dynamicRoutes: TYaloDynamicRoutes = [];
+  private dynamicRoutes: TOrvexDynamicRoute = [];
 
   // FIX: one branch one set of middleware.
   /**
@@ -33,19 +33,19 @@ export class Yalo {
    */
   private globalMiddlewares: Array<TRoutehandler> = [];
 
-  private ignoreRoutes(req: YaloRequest, res: YaloResponse): void {
+  private ignoreRoutes(req: OrvexRequest, res: OrvexResponse): void {
     const junk = JUNK_ROUTES.some((route) => req.url.includes(route));
     if (junk) return res.noContent();
   }
 
   /**
    * Gets the registered handler for the current incoming request.
-   * * @param request - An instance of the YaloRequest.
+   * * @param request - An instance of the OrvexRequest.
    * @returns The route handler that is associated with the current request.
    * @throws {Error} Throws error indicating which method and url was not found.
    */
   private getCurrentRouteInfo(
-    request: YaloRequest,
+    request: OrvexRequest,
   ): TRouteDefinition & { extractedParams: Record<string, string> } {
     // TODO: reivew this claudes magic later
     const cleanUrl = request.url.split("?")[0];
@@ -80,7 +80,7 @@ export class Yalo {
         return { ...route.definition, extractedParams: params };
       }
     }
-    throw new Error(`[Yalo] Route not found: ${request.method} ${request.url}`);
+    throw new Error(`[Orvex] Route not found: ${request.method} ${request.url}`);
   }
 
   /**
@@ -88,7 +88,7 @@ export class Yalo {
    * @param branchedRoutes Nested route handlers.
    */
   public mergeWithGlobalRoute(
-    branchedRoutes: TYaloRoutes,
+    branchedRoutes: TOrvexStaticRoute,
     branchedDynamicRoutes: typeof this.dynamicRoutes = [],
   ) {
     this.staticRoutes = new Map([...this.staticRoutes, ...branchedRoutes]);
@@ -112,12 +112,12 @@ export class Yalo {
   }
 
   /**
-   * Creates a root instance of Yalo app.
+   * Creates a root instance of Orvex app.
    *
-   * @returns An instance of the Yalo app.
+   * @returns An instance of the Orvex app.
    */
   public static create() {
-    const instance = new Yalo({ isRoot: true });
+    const instance = new Orvex({ isRoot: true });
     return instance;
   }
 
@@ -126,7 +126,7 @@ export class Yalo {
    * @param middlewares Array of middleware of type Array<TRoutehandler>.
    * @returns
    */
-  public wire(middlewares: Array<TRoutehandler>): Yalo {
+  public wire(middlewares: Array<TRoutehandler>): Orvex {
     // TODO: find a better way to do this.
     if (this.options.isRoot) {
       this.globalMiddlewares = [...this.globalMiddlewares, ...middlewares];
@@ -173,7 +173,7 @@ export class Yalo {
    * @param branch a nested route dispatcher (idk what that means).
    */
   // TODO: may be rename this to mount
-  public mount(url: string, branch: Branch) {
+  public mount(url: string, branch: OrvexBranch) {
     branch.prefixUrlWith(url, this);
   }
 
@@ -186,8 +186,8 @@ export class Yalo {
   public async listen(port: number, _interface: string = "127.0.0.1", callback: () => void) {
     const server = net.createServer((socket) => {
       socket.on("data", (rawBuffer) => {
-        const request = new YaloRequest(rawBuffer);
-        const response = new YaloResponse(socket);
+        const request = new OrvexRequest(rawBuffer);
+        const response = new OrvexResponse(socket);
 
         this.ignoreRoutes(request, response);
 
@@ -196,7 +196,7 @@ export class Yalo {
 
         const chain = [...this.globalMiddlewares, ...middlewares, handler];
 
-        const pipeline = new Middleware(chain);
+        const pipeline = new OrvexMiddleware(chain);
         pipeline.exeMiddlewarePipeline(request, response);
       });
     });

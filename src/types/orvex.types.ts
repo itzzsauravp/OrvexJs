@@ -1,18 +1,14 @@
-import { YaloRequest, YaloResponse } from "../core";
-import { LogLevel } from "../core/@yalo_enums";
+import { OrvexRequest, OrvexResponse } from "../core";
+import { LogLevel } from "../core/@orvex_enums";
 
-export type TRoutehandler = (
-  req: YaloRequest,
-  res: YaloResponse,
-  delegate: DelegateFunction,
-) => any;
+export type TRoutehandler = (req: OrvexRequest, res: OrvexResponse, delegate: OrvexDelegate) => any;
 
-export type DelegateFunction = () => void | Promise<void>;
+export type OrvexDelegate = () => void | Promise<void>;
 
 // export type TMiddlewarehandler = (
-//   req: YaloRequest,
-//   res: YaloResponse,
-//   delegate: DelegateFunction,
+//   req: OrvexRequest,
+//   res: OrvexResponse,
+//   delegate: OrvexDelegate,
 // ) => void;
 
 export type TRouteDefinition = {
@@ -22,17 +18,17 @@ export type TRouteDefinition = {
   middlewares: Array<TRoutehandler>;
 };
 
-export type TYaloRoutes = Map<string, TRouteDefinition>;
+export type TOrvexStaticRoute = Map<string, TRouteDefinition>;
 
-export type TYaloAppOptions = {
+export type TOrvexAppOption = {
   isRoot: boolean;
 };
 
-export type TPicoOptions = {
+export type TPicoOption = {
   type: LogLevel;
 };
 
-export type TYaloDynamicRoutes = Array<{
+export type TOrvexDynamicRoute = Array<{
   segments: string[];
   paramNames: string[];
   definition: TRouteDefinition;

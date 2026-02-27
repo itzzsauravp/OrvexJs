@@ -1,6 +1,6 @@
-# YALO - Yet Another Listener Object
+# OrvexJs
 
-Yalo is a low-level, high-performance implementation of an HTTP server built directly on top of Node.js TCP sockets. It provides an Express-like interface while maintaining a transparent connection to the underlying HTTP protocol.
+OrvexJs is a low-level, high-performance implementation of an HTTP server built directly on top of Node.js TCP sockets. It provides an Express-like interface while maintaining a transparent connection to the underlying HTTP protocol.
 
 ## Features
 
@@ -16,27 +16,50 @@ Yalo is a low-level, high-performance implementation of an HTTP server built dir
 ### Basic Server Setup
 
 ```ts
-const app = Yalo.create();
+const orvex = Orvex.create();
 
-// Global middleware
-app.wire([requestLogger]);
-
-// Standard route registration
-app.register(HTTP.GET, "/health", (req, res) => {
-  return res.setHeader("Content-Type", "text/html").ok("<h1>Server is Healthy</h1>");
+orvex.register(HTTP.GET, "/", (req, res) => {
+  res.ok("Hello World!");
 });
 
-app.listen(8000, "0.0.0.0", () => {
-  console.log("Yalo server active on port 8000");
+orvex.listen(8000);
+```
+
+### Details
+
+```ts
+const orvex = Orvex.create();
+
+// Global middleware: Runs on every single incoming request
+orvex.wire([globalTrafficMonitor]);
+
+// Standard route registration
+orvex.register(
+  HTTP.GET,
+  "/health",
+  (req, res) => {
+    return res
+      .setHeader("Content-Type", "text/html")
+      .ok("<h1>Server is Healthy</h1>");
+  },
+  // Route-specific middleware: Runs ONLY for this specific GET /health endpoint
+  [validateHealthCheckAccess],
+);
+
+orvex.listen(8000, "0.0.0.0", () => {
+  console.log("Orvex server active on port 8000");
 });
 ```
 
 ### Branching and Modularization
 
-Yalo supports "Branches" to help organize large codebases into modular sections.
+Orvex supports "Branches" to help organize large codebases into modular sections.
 
 ```ts
-const authBranch = new Branch();
+const authBranch = new OrvexBranch();
+
+// Branch-level middleware: Applies to ALL routes defined within this branch (e.g., /auth/*)
+authBranch.wire([traceAuthSession, checkApiKeys]);
 
 authBranch.register(HTTP.POST, "/login", (req, res) => {
   const { username } = req.body;
@@ -44,12 +67,13 @@ authBranch.register(HTTP.POST, "/login", (req, res) => {
 });
 
 // Mount back to the app
+// All routes inside 'authBranch' will now be prefixed with '/auth'
 app.mount("/auth", authBranch);
 ```
 
 ## API Reference
 
-### Response Object (`YaloResponse`)
+### Response Object (`OrvexResponse`)
 
 The response object includes built-in methods that automatically set the correct status codes and reason phrases.
 
@@ -71,21 +95,19 @@ The response object includes built-in methods that automatically set the correct
 ### Repository Setup
 
 ```bash
-git clone http://github.com/itzzsauravp/yalo.git
-cd yalo
-npm install
+git clone http://github.com/itzzsauravp/OrvexJs.git && cd OrvexJs
 
+npm install
 ```
 
 ### Running the Project
 
 ```bash
 # Start the example server
-npm run yalo
+npm run orvex
 
 # Start in development mode with hot-reloading
-npm run yalo:dev
-
+npm run orvex:dev
 ```
 
 ---

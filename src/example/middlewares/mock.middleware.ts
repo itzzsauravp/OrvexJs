@@ -1,23 +1,23 @@
 import os from "node:os";
-import { YaloRequest, YaloResponse } from "../../core";
+import { OrvexRequest, OrvexResponse } from "../../core";
 
-export function authLogger(req: YaloRequest, _res: YaloResponse) {
+export function authLogger(req: OrvexRequest, _res: OrvexResponse) {
   const time = new Date();
   const body = req.body;
   console.log(`Login Credentails: ${JSON.stringify(body)} @ Time: ${time}`);
 }
 
-export function greetLogger(_req: YaloRequest, _res: YaloResponse) {
+export function greetLogger(_req: OrvexRequest, _res: OrvexResponse) {
   console.log(`Hi there dear user, This is a greeter logger`);
 }
 
-export function requestLogger(req: YaloRequest, _res: YaloResponse) {
+export function requestLogger(req: OrvexRequest, _res: OrvexResponse) {
   const time = new Date();
   const url = req.url;
   console.log(`Accessing: ${url} @ Time: ${time}`);
 }
 
-export function healthLogger(_req: YaloRequest, _res: YaloResponse) {
+export function healthLogger(_req: OrvexRequest, _res: OrvexResponse) {
   const totalMem = os.totalmem();
   const freeMem = os.freemem();
   const usedMem = totalMem - freeMem;

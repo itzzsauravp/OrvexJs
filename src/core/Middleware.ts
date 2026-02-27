@@ -1,14 +1,14 @@
-import { TRoutehandler } from "./@yalo_types";
-import { YaloRequest } from "./Request";
-import { YaloResponse } from "./Response";
-import { LogLevel } from "./@yalo_enums";
+import { TRoutehandler } from "./@orvex_types";
+import { OrvexRequest } from "./Request";
+import { OrvexResponse } from "./Response";
+import { LogLevel } from "./@orvex_enums";
 import { term } from "../common";
 
-export class Middleware {
+export class OrvexMiddleware {
   constructor(private readonly middlewares: Array<TRoutehandler>) {}
 
   private createPipeline() {
-    return (req: YaloRequest, res: YaloResponse) => {
+    return (req: OrvexRequest, res: OrvexResponse) => {
       let index = -1;
 
       const dispatch = (i: number) => {
@@ -22,7 +22,7 @@ export class Middleware {
           if (fn.length < 3) {
             term.print(
               LogLevel.WARN,
-              "Yalo",
+              "Orvex",
               `Missing delegate() method for middleware ${term.setBg("bgCyan", fn.name)}`,
               "please add a delegate method to remove this warning",
             );
@@ -34,7 +34,7 @@ export class Middleware {
         } catch (error) {
           term.print(
             LogLevel.ERROR,
-            "Yalo",
+            "Orvex",
             `Middleware Pipeline crashed ${term.setBg("bgRed", error.message)}`,
           );
           res.code(500).relay({ error: "Internal Server Error", originalError: error.message });
@@ -45,7 +45,7 @@ export class Middleware {
     };
   }
 
-  public exeMiddlewarePipeline(req: YaloRequest, res: YaloResponse) {
+  public exeMiddlewarePipeline(req: OrvexRequest, res: OrvexResponse) {
     const pipeline = this.createPipeline();
     pipeline(req, res);
   }

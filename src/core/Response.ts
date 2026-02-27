@@ -1,8 +1,8 @@
 import net from "node:net";
-import { YaloStatus } from "./@yalo_enums";
-import { YALO_STATUS_MESSAGES } from "../core/@yalo_constants";
+import { OrvexStatus } from "./@orvex_enums";
+import { ORVEX_STATUS_MESSAGES } from "./@orvex_constants";
 
-export class YaloResponse {
+export class OrvexResponse {
   private status: number = 200;
   private headers: Record<string, string> = {
     "Content-Type": "text/plain",
@@ -14,7 +14,7 @@ export class YaloResponse {
    * @param code Status code for the response
    * @param data Data to stream to the client
    */
-  private send(code: YaloStatus, data?: any): void {
+  private send(code: OrvexStatus, data?: any): void {
     const response = this.constructResponse(data || "", code);
     this.socket.write(response);
     this.socket.end();
@@ -37,7 +37,7 @@ export class YaloResponse {
     }
     const bodyContent = body || "";
     this.headers["Content-Length"] = Buffer.byteLength(body).toString();
-    const statusMessage = YALO_STATUS_MESSAGES[code];
+    const statusMessage = ORVEX_STATUS_MESSAGES[code];
     const headerString = Object.entries(this.headers)
       .map(([key, value]) => `${key}: ${value}`)
       .join("\r\n");
@@ -48,18 +48,18 @@ export class YaloResponse {
   /**
    * This method sets the status code for response.
    * @param status a HTTP status code.
-   * @returns Returns an instance of the YaloRespose itself.
+   * @returns Returns an instance of the OrvexRespose itself.
    */
-  public code(status: YaloStatus): YaloResponse {
+  public code(status: OrvexStatus): OrvexResponse {
     this.status = status;
     return this;
   }
   /**
    *  This method can be used to tune/fuse headers to the reponse
    * @param headers A Record<string, string> or headers
-   * @returns Returns an instance of the YaloRespose itself.
+   * @returns Returns an instance of the OrvexRespose itself.
    */
-  public setHeaders(headers: Record<string, string>): YaloResponse {
+  public setHeaders(headers: Record<string, string>): OrvexResponse {
     // TODO: probably have to check the headers here may be
     this.headers = { ...this.headers, ...headers };
     return this;
@@ -82,7 +82,7 @@ export class YaloResponse {
    * @param data Optional response body (string or object).
    */
   public ok(data?: any) {
-    this.send(YaloStatus.OK, data);
+    this.send(OrvexStatus.OK, data);
   }
 
   /**
@@ -90,21 +90,21 @@ export class YaloResponse {
    * @param data Optional response body, typically the created resource.
    */
   public created(data?: any) {
-    this.send(YaloStatus.CREATED, data);
+    this.send(OrvexStatus.CREATED, data);
   }
 
   /**
    * 202 Accepted: The request has been accepted for processing, but processing is not yet complete.
    */
   public accepted(data?: any) {
-    this.send(YaloStatus.ACCEPTED, data);
+    this.send(OrvexStatus.ACCEPTED, data);
   }
 
   /**
    * 204 No Content: The server successfully processed the request, but is not returning any content.
    */
   public noContent() {
-    this.send(YaloStatus.NO_CONTENT);
+    this.send(OrvexStatus.NO_CONTENT);
   }
 
   // --- 3xx Redirection ---
@@ -115,7 +115,7 @@ export class YaloResponse {
    */
   public movedPermanently(location: string) {
     this.setHeaders({ Location: location });
-    this.send(YaloStatus.MOVED_PERMANENTLY);
+    this.send(OrvexStatus.MOVED_PERMANENTLY);
   }
 
   /**
@@ -124,7 +124,7 @@ export class YaloResponse {
    */
   public found(location: string) {
     this.setHeaders({ Location: location });
-    this.send(YaloStatus.FOUND);
+    this.send(OrvexStatus.FOUND);
   }
 
   // --- 4xx Client Errors ---
@@ -134,42 +134,42 @@ export class YaloResponse {
    * @param data Error details or message.
    */
   public badRequest(data?: any) {
-    this.send(YaloStatus.BAD_REQUEST, data);
+    this.send(OrvexStatus.BAD_REQUEST, data);
   }
 
   /**
    * 401 Unauthorized: The request requires user authentication.
    */
   public unauthorized(data?: any) {
-    this.send(YaloStatus.UNAUTHORIZED, data);
+    this.send(OrvexStatus.UNAUTHORIZED, data);
   }
 
   /**
    * 403 Forbidden: The server understood the request but refuses to authorize it.
    */
   public forbidden(data?: any) {
-    this.send(YaloStatus.FORBIDDEN, data);
+    this.send(OrvexStatus.FORBIDDEN, data);
   }
 
   /**
    * 404 Not Found: The server cannot find the requested resource.
    */
   public notFound(data?: any) {
-    this.send(YaloStatus.NOT_FOUND, data || "Not Found");
+    this.send(OrvexStatus.NOT_FOUND, data || "Not Found");
   }
 
   /**
    * 405 Method Not Allowed: The request method is not supported for the requested resource.
    */
   public methodNotAllowed(data?: any) {
-    this.send(YaloStatus.METHOD_NOT_ALLOWED, data);
+    this.send(OrvexStatus.METHOD_NOT_ALLOWED, data);
   }
 
   /**
    * 409 Conflict: The request could not be completed due to a conflict with the current state of the resource.
    */
   public conflict(data?: any) {
-    this.send(YaloStatus.CONFLICT, data);
+    this.send(OrvexStatus.CONFLICT, data);
   }
 
   // --- 5xx Server Errors ---
@@ -178,27 +178,27 @@ export class YaloResponse {
    * 500 Internal Server Error: The server encountered an unexpected condition that prevented it from fulfilling the request.
    */
   public internalError(data?: any) {
-    this.send(YaloStatus.INTERNAL_ERROR, data);
+    this.send(OrvexStatus.INTERNAL_ERROR, data);
   }
 
   /**
    * 501 Not Implemented: The server does not support the functionality required to fulfill the request.
    */
   public notImplemented(data?: any) {
-    this.send(YaloStatus.NOT_IMPLEMENTED, data);
+    this.send(OrvexStatus.NOT_IMPLEMENTED, data);
   }
 
   /**
    * 502 Bad Gateway: The server received an invalid response from an upstream server.
    */
   public badGateway(data?: any) {
-    this.send(YaloStatus.BAD_GATEWAY, data);
+    this.send(OrvexStatus.BAD_GATEWAY, data);
   }
 
   /**
    * 503 Service Unavailable: The server is currently unable to handle the request (due to overload or maintenance).
    */
   public serviceUnavailable(data?: any) {
-    this.send(YaloStatus.SERVICE_UNAVAILABLE, data);
+    this.send(OrvexStatus.SERVICE_UNAVAILABLE, data);
   }
 }

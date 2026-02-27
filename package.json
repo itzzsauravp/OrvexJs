@@ -1,7 +1,7 @@
 {
-  "name": "yalo",
+  "name": "orvexjs",
   "version": "1.0.0",
-  "description": "yalo - Yet Another Listener Object",
+  "description": "Orvex is ...",
   "license": "MIT",
   "author": {
     "name": "Saurav Parajulee",
@@ -9,17 +9,17 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/itzzsauravp/yalo.git"
+    "url": "https://github.com/itzzsauravp/orvex.git"
   },
   "type": "commonjs",
-  "main": "yalo.js",
+  "main": "Orvex.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "oxlint",
     "format": "oxfmt src",
     "lint:fix": "oxlint --fix",
-    "yalo": "npx ts-node ./src/example/server.ts",
-    "yalo:dev": "npx tsx --watch ./src/example/server.ts",
+    "orvex": "npx ts-node ./src/example/server.ts",
+    "orvex:dev": "npx tsx --watch ./src/example/server.ts",
     "prepare": "husky"
   },
   "dependencies": {

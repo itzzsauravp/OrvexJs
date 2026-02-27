@@ -1,3 +1,3 @@
-import { YaloTerm } from "../utils/YaloTerm";
+import { OrvexTerm } from "../utils/OrvexTerm";
 
-export const term = new YaloTerm();
+export const term = new OrvexTerm();

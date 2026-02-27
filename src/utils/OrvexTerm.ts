@@ -1,8 +1,13 @@
 import pc from "picocolors";
-import { LogLevel } from "../core/@yalo_enums";
-import { PicoBgColor, PicoColor } from "../core/@yalo_types";
+import { LogLevel } from "../core/@orvex_enums";
+import { PicoBgColor, PicoColor } from "../core/@orvex_types";
 
-export class YaloTerm {
+/**
+ * OrvexTerm class provides ways to log information about the app to the terminal.(`LOG`, `WARN`, `ERROR`)
+ *
+ * Example: `[Orvex] [WARN]: Missing delegate() method for middleware <function_name_here> (HINT: please add a delegate method to remove this warning)`
+ */
+export class OrvexTerm {
   /**
    * Wraps text in a foreground color.
    * Example: logger.setColor("red", "something went wrong")
@@ -44,11 +49,11 @@ export class YaloTerm {
   /**
    * Prints a styled log message.
    * @param level   - LogLevel.ERROR | WARN | LOG
-   * @param tag     - Label shown in cyan e.g. "Yalo"
+   * @param tag     - Label shown in cyan e.g. "Orvex"
    * @param message - The main message
    * @param hint    - Optional gray hint shown at the end
    *
-   * Example: logger.print(LogLevel.WARN, "Yalo", "something is off", "try this fix")
+   * Example: logger.print(LogLevel.WARN, "Orvex", "something is off", "try this fix")
    */
   public print(level: LogLevel, tag: string, message: string, hint?: string): void {
     const prefix = pc.cyan(`[${tag}]`);

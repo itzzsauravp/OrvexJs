@@ -1,5 +1,5 @@
-import { YaloRequest, YaloResponse } from "../../core";
+import { OrvexRequest, OrvexResponse } from "../../core";
 
-export function loginHandler(_req: YaloRequest, res: YaloResponse) {
+export function loginHandler(_req: OrvexRequest, res: OrvexResponse) {
   return res.relay({ success: true, message: "successfully loggedin" });
 }

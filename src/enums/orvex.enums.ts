@@ -7,7 +7,7 @@ export enum HTTP {
   OPTIONS = "OPTIONS",
 }
 
-export enum YaloStatus {
+export enum OrvexStatus {
   OK = 200,
   CREATED = 201,
   ACCEPTED = 202,
