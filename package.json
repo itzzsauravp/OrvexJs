@@ -19,6 +19,7 @@
     "format": "oxfmt src",
     "lint:fix": "oxlint --fix",
     "yalo": "npx ts-node ./src/example/server.ts",
+    "yalo:dev": "npx tsx --watch ./src/example/server.ts",
     "prepare": "husky"
   },
   "dependencies": {

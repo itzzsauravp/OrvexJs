@@ -155,6 +155,7 @@ export class Yalo {
       const segments = url.split("/").filter(Boolean);
       const paramNames = segments.filter((s) => s.startsWith("$")).map((s) => s.slice(1));
       this.dynamicRoutes.push({ segments, paramNames, definition });
+      return;
     }
     const routeHash = quickHash(`${method}-${url}`);
     this.staticRoutes.set(routeHash, definition);

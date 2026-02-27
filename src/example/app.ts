@@ -1,4 +1,4 @@
-import { HTTP, YaloStatus } from "../core/@yalo_enums";
+import { HTTP } from "../core/@yalo_enums";
 import { Yalo, YaloResponse } from "../core";
 import authBranch from "./branches/auth.branch";
 import { greetLogger, healthLogger, requestLogger } from "./middlewares/mock.middleware";
@@ -13,9 +13,8 @@ export async function bootstrap() {
     "/health",
     function healthCheckup(_, res: YaloResponse) {
       return res
-        .code(YaloStatus.OK)
         .setHeaders({ Connection: "Keep-Alive", "Content-Type": "text/html" })
-        .relay(`<h1>hello world ${new Date()}</h1>`);
+        .ok(`<h1>hello world ${new Date()}</h1>`);
     },
     [healthLogger, greetLogger],
   );
