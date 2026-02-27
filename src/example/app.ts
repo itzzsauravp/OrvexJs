@@ -4,23 +4,19 @@ import authBranch from "./branches/auth.branch";
 import { greetLogger, healthLogger, requestLogger } from "./middlewares/mock.middleware";
 import homeBranch from "./branches/home.branch";
 
-export async function bootstrap() {
-  const app = await Yalo.create();
-  app.wire([requestLogger]);
+export const app = Yalo.create();
 
-  app.register(
-    HTTP.GET,
-    "/health",
-    function healthCheckup(_, res: YaloResponse) {
-      return res
-        .setHeaders({ Connection: "Keep-Alive", "Content-Type": "text/html" })
-        .ok(`<h1>hello world ${new Date()}</h1>`);
-    },
-    [healthLogger, greetLogger],
-  );
+app.wire([requestLogger]);
+app.mount("/auth", authBranch);
+app.mount("/home", homeBranch);
 
-  app.mount("/auth", authBranch);
-  app.mount("/home", homeBranch);
-
-  return app;
-}
+app.register(
+  HTTP.GET,
+  "/health",
+  function healthCheckup(_, res: YaloResponse) {
+    return res
+      .setHeaders({ Connection: "Keep-Alive", "Content-Type": "text/html" })
+      .ok(`<h1>hello world ${new Date()}</h1>`);
+  },
+  [healthLogger, greetLogger],
+);

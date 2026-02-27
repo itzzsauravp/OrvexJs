@@ -112,11 +112,11 @@ export class Yalo {
   }
 
   /**
-   * Creates a instance of new Yalo app.
+   * Creates a root instance of Yalo app.
    *
    * @returns An instance of the Yalo app.
    */
-  public static async create() {
+  public static create() {
     const instance = new Yalo({ isRoot: true });
     return instance;
   }
