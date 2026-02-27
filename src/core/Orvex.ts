@@ -178,12 +178,35 @@ export class Orvex {
   }
 
   /**
+   * Overload 1: All arguments provided
+   */
+  public async listen(port: number, _interface: string, callback?: () => void): Promise<void>;
+
+  /**
+   * Overload 2: Port and Callback only (Skips interface)
+   */
+  public async listen(port: number, callback?: () => void): Promise<void>;
+
+  /**
    * Listens to a specified `port` and `_interface`.
    * @param port PORT number to listen to.
-   * @param _interface Interface to listen to '127.0.0.1' by default.
-   * @param callback Function to define some behavior right after server starts.
+   * @param interfaceOrCallback Interface to listen to '127.0.0.1' by default. Or A Function to define some behavior right after server starts.
+   * @param callback A Function to define some behavior right after server starts.
    */
-  public async listen(port: number, _interface: string = "127.0.0.1", callback: () => void) {
+  public async listen(
+    port: number,
+    interfaceOrCallback?: string | (() => void),
+    callback?: () => void,
+  ): Promise<void> {
+    let host = "127.0.0.1";
+    let actualCallback = callback;
+
+    if (typeof interfaceOrCallback === "function") {
+      actualCallback = interfaceOrCallback;
+    } else if (typeof interfaceOrCallback === "string") {
+      host = interfaceOrCallback;
+    }
+
     const server = net.createServer((socket) => {
       socket.on("data", (rawBuffer) => {
         const request = new OrvexRequest(rawBuffer);
@@ -201,9 +224,10 @@ export class Orvex {
       });
     });
 
-    server.listen(port, _interface);
-    console.log("Static Routes:", this.getStaticRoutes());
-    console.log("Dynamic Routes:", this.getDynamicRoutes());
-    callback();
+    server.listen(port, host, () => {
+      console.log("Static Routes:", this.getStaticRoutes());
+      console.log("Dynamic Routes:", this.getDynamicRoutes());
+      if (actualCallback) actualCallback();
+    });
   }
 }

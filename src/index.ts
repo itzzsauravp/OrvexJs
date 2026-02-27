@@ -7,4 +7,4 @@ orvex.register(HTTP.GET, "/", (req, res) => {
   res.ok("Hello world");
 });
 
-// orvex.listen(8000);
+orvex.listen(8000);

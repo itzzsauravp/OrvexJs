@@ -22,4 +22,4 @@ export const ORVEX_STATUS_MESSAGES: Record<OrvexStatus, string> = {
   [OrvexStatus.SERVICE_UNAVAILABLE]: "Service Unavailable",
 };
 
-export const JUNK_ROUTES = ["./favicon.ico"];
+export const JUNK_ROUTES = ["/favicon.ico"];
