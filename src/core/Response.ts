@@ -1,6 +1,6 @@
 import net from "node:net";
 import { YaloStatus } from "./@yalo_enums";
-import { YaloStatusMessages } from "../core/@yalo_constants";
+import { YALO_STATUS_MESSAGES } from "../core/@yalo_constants";
 
 export class YaloResponse {
   private status: number = 200;
@@ -37,7 +37,7 @@ export class YaloResponse {
     }
     const bodyContent = body || "";
     this.headers["Content-Length"] = Buffer.byteLength(body).toString();
-    const statusMessage = YaloStatusMessages[code];
+    const statusMessage = YALO_STATUS_MESSAGES[code];
     const headerString = Object.entries(this.headers)
       .map(([key, value]) => `${key}: ${value}`)
       .join("\r\n");

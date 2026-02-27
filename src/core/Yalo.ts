@@ -10,8 +10,11 @@ import {
 import { YaloRequest, YaloResponse, Branch } from ".";
 import { HTTP } from "./@yalo_enums";
 import { Middleware } from "./Middleware";
+import { JUNK_ROUTES } from "../constants";
 
 export class Yalo {
+  constructor(private readonly options?: TYaloAppOptions) {}
+
   /**
    * A data structure to hold all the `static` routes registered to the app.
    */
@@ -30,7 +33,10 @@ export class Yalo {
    */
   private globalMiddlewares: Array<TRoutehandler> = [];
 
-  constructor(private readonly options?: TYaloAppOptions) {}
+  private ignoreRoutes(req: YaloRequest, res: YaloResponse): void {
+    const junk = JUNK_ROUTES.some((route) => req.url.includes(route));
+    if (junk) return res.noContent();
+  }
 
   /**
    * Gets the registered handler for the current incoming request.
@@ -182,6 +188,8 @@ export class Yalo {
       socket.on("data", (rawBuffer) => {
         const request = new YaloRequest(rawBuffer);
         const response = new YaloResponse(socket);
+
+        this.ignoreRoutes(request, response);
 
         const { handler, middlewares, extractedParams } = this.getCurrentRouteInfo(request);
         request.params = extractedParams;

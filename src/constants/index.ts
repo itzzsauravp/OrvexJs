@@ -1,6 +1,6 @@
 import { YaloStatus } from "../enums/yalo.enums";
 
-export const YaloStatusMessages: Record<YaloStatus, string> = {
+export const YALO_STATUS_MESSAGES: Record<YaloStatus, string> = {
   [YaloStatus.OK]: "OK",
   [YaloStatus.CREATED]: "Created",
   [YaloStatus.ACCEPTED]: "Accepted",
@@ -21,3 +21,5 @@ export const YaloStatusMessages: Record<YaloStatus, string> = {
   [YaloStatus.BAD_GATEWAY]: "Bad Gateway",
   [YaloStatus.SERVICE_UNAVAILABLE]: "Service Unavailable",
 };
+
+export const JUNK_ROUTES = ["./favicon.ico"];
