@@ -53,3 +53,11 @@ export type PicoBgColor =
   | "bgMagenta"
   | "bgWhite"
   | "bgBlack";
+
+export interface IOrvexFile {
+  fieldname: string;
+  originalname: string;
+  mimetype: string;
+  size: number;
+  buffer: Buffer;
+}

@@ -1,19 +1,12 @@
 import { cookieParser } from "../parsers/cookie.parser";
-
-interface IOrvexFile {
-  fieldname: string;
-  originalname: string;
-  mimetype: string;
-  size: number;
-  buffer: Buffer;
-}
+import { OrvexFile, OrvexFileCollection } from "./File";
 
 interface IOrvexRequest {
   method: string;
   url: string;
   version: string;
   body: any;
-  files: IOrvexFile[];
+  files: OrvexFileCollection;
   query: Record<string, string>;
   params: Record<string, string>;
   cookie: any;
@@ -25,7 +18,7 @@ export class OrvexRequest {
     method: "",
     url: "",
     version: "",
-    files: [],
+    files: new OrvexFileCollection(),
     body: {},
     query: {},
     params: {},
@@ -120,11 +113,11 @@ export class OrvexRequest {
   */
   private parseMultipart(body: Buffer, contentType: string) {
     const boundaryMatch = contentType.match(/boundary=(.+)/);
-    if (!boundaryMatch) return { fields: {}, files: [] };
+    if (!boundaryMatch) return { fields: {}, files: new OrvexFileCollection() };
 
     const boundary = Buffer.from("--" + boundaryMatch[1]);
     const fields: Record<string, string> = {};
-    const files: IOrvexFile[] = [];
+    const files = new OrvexFileCollection();
 
     let start = body.indexOf(boundary);
     while (start !== -1) {
@@ -153,13 +146,14 @@ export class OrvexRequest {
       });
 
       if (params.filename) {
-        files.push({
+        const fileInstance = new OrvexFile({
           fieldname: params.name || "file",
           originalname: params.filename,
           mimetype: headerMap["content-type"] || "application/octet-stream",
           size: data.length,
           buffer: data,
         });
+        files.push(fileInstance);
       } else if (params.name) {
         fields[params.name] = data.toString();
       }

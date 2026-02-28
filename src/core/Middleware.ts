@@ -19,7 +19,8 @@ export class OrvexMiddleware {
           const fn = this.middlewares[i];
           if (!fn) return;
 
-          if (fn.length < 3) {
+          const lastIndex = this.middlewares.length - 1;
+          if (i !== lastIndex && fn.length < 3) {
             term.print(
               LogLevel.WARN,
               "Orvex",
