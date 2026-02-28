@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/itzzsauravp/orvex.git"
+    "url": "https://github.com/itzzsauravp/OrvexJs.git"
   },
   "type": "commonjs",
   "main": "Orvex.ts",
@@ -20,6 +20,7 @@
     "lint:fix": "oxlint --fix",
     "orvex": "npx ts-node ./src/example/server.ts",
     "orvex:dev": "npx tsx --watch ./src/example/server.ts",
+    "orvex:test": "npx tsx --watch ./src/index.ts",
     "prepare": "husky"
   },
   "dependencies": {

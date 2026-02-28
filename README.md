@@ -38,9 +38,7 @@ orvex.register(
   HTTP.GET,
   "/health",
   (req, res) => {
-    return res
-      .setHeader("Content-Type", "text/html")
-      .ok("<h1>Server is Healthy</h1>");
+    return res.setHeader("Content-Type", "text/html").ok("<h1>Server is Healthy</h1>");
   },
   // Route-specific middleware: Runs ONLY for this specific GET /health endpoint
   [validateHealthCheckAccess],

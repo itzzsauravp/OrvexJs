@@ -23,3 +23,10 @@ export const ORVEX_STATUS_MESSAGES: Record<OrvexStatus, string> = {
 };
 
 export const JUNK_ROUTES = ["/favicon.ico"];
+
+export const MAX_PAYLOAD_SIZE = 50 * 1024 * 1024;
+
+export const RAW_HTTP_RESPONSE = {
+  PAYLOAD_TOO_LARGE: "HTTP/1.1 413 Payload Too Large\r\nConnection: close\r\n\r\n",
+  REQUEST_TIMEOUT: "HTTP/1.1 408 Request Timeout\r\nConnection: close\r\n\r\n",
+};

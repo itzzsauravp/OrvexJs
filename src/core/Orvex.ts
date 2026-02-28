@@ -10,7 +10,7 @@ import {
 import { OrvexBranch, OrvexRequest, OrvexResponse } from ".";
 import { HTTP } from "./@orvex_enums";
 import { OrvexMiddleware } from "./Middleware";
-import { JUNK_ROUTES } from "./@orvex_constants";
+import { JUNK_ROUTES, MAX_PAYLOAD_SIZE, RAW_HTTP_RESPONSE } from "./@orvex_constants";
 
 export class Orvex {
   constructor(private readonly options?: TOrvexAppOption) {}
@@ -33,6 +33,12 @@ export class Orvex {
    */
   private globalMiddlewares: Array<TRoutehandler> = [];
 
+  /**
+   * This is to ignore specific routes like /favicon.co when request sent from browser
+   * @param req OrvexRequest instance
+   * @param res OrvexResponse instance
+   * @returns void
+   */
   private ignoreRoutes(req: OrvexRequest, res: OrvexResponse): void {
     const junk = JUNK_ROUTES.some((route) => req.url.includes(route));
     if (junk) return res.noContent();
@@ -81,6 +87,28 @@ export class Orvex {
       }
     }
     throw new Error(`[Orvex] Route not found: ${request.method} ${request.url}`);
+  }
+
+  /**
+   * Helper to trigger the middleware pipeline once data is fully received.
+   */
+  private handleRequestExecution(socket: net.Socket, rawData: Buffer) {
+    try {
+      const request = new OrvexRequest(rawData);
+      const response = new OrvexResponse(socket);
+
+      this.ignoreRoutes(request, response);
+
+      const { handler, middlewares, extractedParams } = this.getCurrentRouteInfo(request);
+      request.params = extractedParams;
+
+      const chain = [...this.globalMiddlewares, ...middlewares, handler];
+      const pipeline = new OrvexMiddleware(chain);
+      pipeline.exeMiddlewarePipeline(request, response);
+    } catch (err) {
+      console.error("Pipeline Error:", err);
+      socket.end("HTTP/1.1 500 Internal Server Error\r\n\r\n");
+    }
   }
 
   /**
@@ -208,25 +236,64 @@ export class Orvex {
     }
 
     const server = net.createServer((socket) => {
-      socket.on("data", (rawBuffer) => {
-        const request = new OrvexRequest(rawBuffer);
-        const response = new OrvexResponse(socket);
+      let requestBuffer = Buffer.alloc(0);
+      let expectedSize = -1;
 
-        this.ignoreRoutes(request, response);
-
-        const { handler, middlewares, extractedParams } = this.getCurrentRouteInfo(request);
-        request.params = extractedParams;
-
-        const chain = [...this.globalMiddlewares, ...middlewares, handler];
-
-        const pipeline = new OrvexMiddleware(chain);
-        pipeline.exeMiddlewarePipeline(request, response);
+      // setting timeout for 30s
+      socket.setTimeout(30000);
+      socket.on("timeout", () => {
+        console.log("Request took too long. Closing connection.");
+        socket.write(RAW_HTTP_RESPONSE.REQUEST_TIMEOUT);
+        socket.destroy();
       });
+
+      socket.on("data", (chunk) => {
+        requestBuffer = Buffer.concat([requestBuffer, chunk as any]);
+
+        // in case if the user lies about the content length
+        if (requestBuffer.length + chunk.length > MAX_PAYLOAD_SIZE) {
+          console.error("Payload too large");
+          socket.write(RAW_HTTP_RESPONSE.PAYLOAD_TOO_LARGE);
+          return socket.destroy();
+        }
+
+        if (expectedSize === -1) {
+          const headerEndIndex = requestBuffer.indexOf(Buffer.from("\r\n\r\n"));
+          if (headerEndIndex !== -1) {
+            const headersString = requestBuffer.slice(0, headerEndIndex).toString();
+            const contentLengthMatch = headersString.match(/Content-Length: (\d+)/i);
+
+            if (contentLengthMatch) {
+              const contentLength = parseInt(contentLengthMatch[1], 10);
+
+              // if the user claims to send something larger than the defined max payload size
+              if (contentLength > MAX_PAYLOAD_SIZE) {
+                socket.write(RAW_HTTP_RESPONSE.PAYLOAD_TOO_LARGE);
+                return socket.destroy();
+              }
+
+              expectedSize = headerEndIndex + 4 + contentLength;
+            } else {
+              // this is for the get route as it has no body
+              this.handleRequestExecution(socket, requestBuffer);
+              requestBuffer = Buffer.alloc(0);
+              return;
+            }
+          }
+        }
+        // check to see if the request has been completed
+        if (expectedSize !== -1 && requestBuffer.length >= expectedSize) {
+          this.handleRequestExecution(socket, requestBuffer);
+          requestBuffer = Buffer.alloc(0);
+          expectedSize = -1;
+        }
+      });
+
+      socket.on("error", (err) => console.error("Socket Error:", err));
     });
 
     server.listen(port, host, () => {
-      console.log("Static Routes:", this.getStaticRoutes());
-      console.log("Dynamic Routes:", this.getDynamicRoutes());
+      console.log(`Orvex Server running on http://${host}:${port}`);
       if (actualCallback) actualCallback();
     });
   }
