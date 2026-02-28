@@ -57,9 +57,61 @@ export class OrvexFile {
     await fs.writeFile(finalPath, this._buffer);
     return finalPath;
   }
+
+  /**
+   *  Deletes the file at path `destination`
+   * @param destination path to the `file` to be deleted
+   */
+  public static async delete(destination: string) {
+    const absolutePath = path.resolve(destination);
+    try {
+      await fs.unlink(absolutePath);
+    } catch (err) {
+      console.error("Delete failed:", err.message);
+    }
+  }
 }
 
 export class OrvexFileCollection extends Array<OrvexFile> {
+  /**
+   * Filters the file object by certain mimetype
+   */
+  private filterByMime(search: string | string[]): OrvexFileCollection {
+    const filtered = this.filter((file) => {
+      const mime = file.mimetype || "";
+      return Array.isArray(search) ? search.some((s) => mime.includes(s)) : mime.startsWith(search);
+    });
+    return OrvexFileCollection.from(filtered) as OrvexFileCollection;
+  }
+
+  /**
+   * Filters the collection for image files.
+   */
+  public images(): OrvexFileCollection {
+    return this.filterByMime("image");
+  }
+
+  /**
+   * Filters the collection for documents (pdfs, word, etc.).
+   */
+  public docs(): OrvexFileCollection {
+    return this.filterByMime(["application/pdf", "text/", "application/msword"]);
+  }
+
+  /**
+   * Filters the collection for audio files.
+   */
+  public audio(): OrvexFileCollection {
+    return this.filterByMime("audio");
+  }
+
+  /**
+   * Filters the collection for video files.
+   */
+  public video(): OrvexFileCollection {
+    return this.filterByMime("video");
+  }
+
   /**
    * Saves all files in the collection to the same directory.
    * Returns an array of paths where the files were saved.
@@ -68,4 +120,37 @@ export class OrvexFileCollection extends Array<OrvexFile> {
     const savePromises = this.map((file) => file.save(destination));
     return await Promise.all(savePromises);
   }
+
+  /**
+   *  Deletes all the files under the provided `destination`
+   * @param destination path to the `folder` to be cleared
+   */
+  public static async deleteAll(destination: string) {
+    const absolutePath = path.resolve(destination);
+
+    try {
+      const stat = await fs.stat(absolutePath);
+
+      if (!stat.isDirectory()) {
+        throw new Error("Provided path is not a directory");
+      }
+
+      const files = await fs.readdir(absolutePath);
+
+      for (const file of files) {
+        const fullPath = path.join(absolutePath, file);
+        OrvexFile.delete(fullPath);
+      }
+    } catch (err) {
+      console.error("Error:", err.message);
+    }
+  }
+
+  public async getImageFiles() {}
+
+  public async getDocumentFiles() {}
+
+  public async getAudioFiles() {}
+
+  public async getVideoFiles() {}
 }

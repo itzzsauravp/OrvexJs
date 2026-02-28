@@ -13,7 +13,16 @@ import { OrvexMiddleware } from "./Middleware";
 import { JUNK_ROUTES, MAX_PAYLOAD_SIZE, RAW_HTTP_RESPONSE } from "./@orvex_constants";
 
 export class Orvex {
-  constructor(private readonly options?: TOrvexAppOption) {}
+  /**
+   * `isRoot` true indicates the root Orvex instance
+   *
+   * Is `true` by default for `Orvex.create()` method but not for `new Orvex()`
+   */
+  private readonly isRoot: boolean;
+
+  constructor(options?: TOrvexAppOption) {
+    this.isRoot = options.isRoot;
+  }
 
   /**
    * A data structure to hold all the `static` routes registered to the app.
@@ -22,7 +31,6 @@ export class Orvex {
 
   private dynamicRoutes: TOrvexDynamicRoute = [];
 
-  // FIX: one branch one set of middleware.
   /**
    * An array of middlewares intended for specific branch.
    */
@@ -53,7 +61,6 @@ export class Orvex {
   private getCurrentRouteInfo(
     request: OrvexRequest,
   ): TRouteDefinition & { extractedParams: Record<string, string> } {
-    // TODO: reivew this claudes magic later
     const cleanUrl = request.url.split("?")[0];
     const routeHash = quickHash(`${request.method}-${cleanUrl}`);
     const staticMatch = this.staticRoutes.get(routeHash);
@@ -107,7 +114,7 @@ export class Orvex {
       pipeline.exeMiddlewarePipeline(request, response);
     } catch (err) {
       console.error("Pipeline Error:", err);
-      socket.end("HTTP/1.1 500 Internal Server Error\r\n\r\n");
+      socket.end(RAW_HTTP_RESPONSE.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -156,7 +163,7 @@ export class Orvex {
    */
   public wire(middlewares: Array<TRoutehandler>): Orvex {
     // TODO: find a better way to do this.
-    if (this.options.isRoot) {
+    if (this.isRoot) {
       this.globalMiddlewares = [...this.globalMiddlewares, ...middlewares];
     } else {
       // TODO: probably have to deal with which sets of middleware for which branch problem here
@@ -200,7 +207,6 @@ export class Orvex {
    * @param url Requested resource.
    * @param branch a nested route dispatcher (idk what that means).
    */
-  // TODO: may be rename this to mount
   public mount(url: string, branch: OrvexBranch) {
     branch.prefixUrlWith(url, this);
   }

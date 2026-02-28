@@ -1,6 +1,10 @@
 import { quickHash } from "../helpers/general.helper";
 import { Orvex } from ".";
 
+/**
+ * OrvexBranch represents a modular routing unit
+ * that groups related routes and enables nested routing.
+ */
 export class OrvexBranch extends Orvex {
   constructor() {
     super({ isRoot: false });

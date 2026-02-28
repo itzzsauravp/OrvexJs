@@ -29,4 +29,5 @@ export const MAX_PAYLOAD_SIZE = 50 * 1024 * 1024;
 export const RAW_HTTP_RESPONSE = {
   PAYLOAD_TOO_LARGE: "HTTP/1.1 413 Payload Too Large\r\nConnection: close\r\n\r\n",
   REQUEST_TIMEOUT: "HTTP/1.1 408 Request Timeout\r\nConnection: close\r\n\r\n",
+  INTERNAL_SERVER_ERROR: "HTTP/1.1 500 Internal Server Error\r\n\r\n",
 };
