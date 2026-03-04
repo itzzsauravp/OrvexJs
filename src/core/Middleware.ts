@@ -8,10 +8,10 @@ export class OrvexMiddleware {
   constructor(private readonly middlewares: Array<TRoutehandler>) {}
 
   private createPipeline() {
-    return (req: OrvexRequest, res: OrvexResponse) => {
+    return async (req: OrvexRequest, res: OrvexResponse) => {
       let index = -1;
 
-      const dispatch = (i: number) => {
+      const dispatch = async (i: number): Promise<void> => {
         try {
           if (i <= index) throw new Error("next() called multiple times");
           index = i;
@@ -20,34 +20,34 @@ export class OrvexMiddleware {
           if (!fn) return;
 
           const lastIndex = this.middlewares.length - 1;
+
           if (i !== lastIndex && fn.length < 3) {
             term.print(
               LogLevel.WARN,
               "Orvex",
-              `Missing delegate() method for middleware ${term.setBg("bgCyan", fn.name)}`,
-              "please add a delegate method to remove this warning",
+              `Missing next() method for middleware ${term.setBg("bgCyan", fn.name)}`,
             );
-            fn(req, res, () => {});
-            return dispatch(i + 1);
+            await fn(req, res, () => {});
+            return await dispatch(i + 1);
           }
 
-          return fn(req, res, () => dispatch(i + 1));
+          await fn(req, res, () => dispatch(i + 1));
         } catch (error) {
           term.print(
             LogLevel.ERROR,
             "Orvex",
-            `Middleware Pipeline crashed ${term.setBg("bgRed", error.message)}`,
+            `Middleware Pipeline crashed: ${term.setBg("bgRed", error.message)}`,
           );
-          res.code(500).relay({ error: "Internal Server Error", originalError: error.message });
+          res.code(500).relay({ error: "Internal Server Error" });
         }
       };
 
-      return dispatch(0);
+      return await dispatch(0);
     };
   }
 
-  public exeMiddlewarePipeline(req: OrvexRequest, res: OrvexResponse) {
+  public async exeMiddlewarePipeline(req: OrvexRequest, res: OrvexResponse) {
     const pipeline = this.createPipeline();
-    pipeline(req, res);
+    await pipeline(req, res);
   }
 }
