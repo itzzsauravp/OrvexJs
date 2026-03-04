@@ -6,6 +6,7 @@ interface IOrvexRequest {
   url: string;
   version: string;
   body: any;
+  user: any;
   files: OrvexFileCollection;
   query: Record<string, string>;
   params: Record<string, string>;
@@ -20,6 +21,7 @@ export class OrvexRequest {
     version: "",
     files: new OrvexFileCollection(),
     body: {},
+    user: undefined,
     query: {},
     params: {},
     cookie: null,
@@ -162,7 +164,7 @@ export class OrvexRequest {
     return { fields, files };
   }
 
-  // Getters
+  // Getters & Setters
   get method() {
     return this.requestObject.method;
   }
@@ -186,5 +188,11 @@ export class OrvexRequest {
   }
   set params(val: Record<string, string>) {
     this.requestObject.params = { ...this.requestObject.params, ...val };
+  }
+  get user() {
+    return this.requestObject.user;
+  }
+  set user(val: any) {
+    this.requestObject.user = val;
   }
 }
