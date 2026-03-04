@@ -1,0 +1,19 @@
+# Development / Tooling
+.husky/
+node_modules/
+tsconfig.json
+.gitignore
+.npmrc
+
+# Source and Assets
+src/
+example/
+public/
+tests/
+dist/example/
+
+# Build Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.tsbuildinfo
