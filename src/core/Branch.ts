@@ -11,28 +11,37 @@ export class OrvexBranch extends Orvex {
   }
 
   /**
-   *
-   * @param url A prefix for the nested route handlers.
-   * @param orvexInstance Instance of the main Orvex app.
+   * @internal
+   * This prepares the branch's routes to be swallowed by the root app.
    */
-  public prefixUrlWith(url: string, orvexInstance: Orvex) {
+  public getProcessedRoutes(prefix: string) {
     const staticRoutes = this.getStaticRoutes();
 
     const updatedStatic = new Map(
       [...staticRoutes].map(([_key, value]) => {
-        const newUrl = `${url}${value.url}`;
-        value.url = newUrl;
+        const newUrl = `${prefix}${value.url}`;
+        // We create a new object to avoid mutating the original branch definition
+        const updatedValue = {
+          ...value,
+          url: newUrl,
+          // Combine branch-wide middlewares with the specific route middlewares
+          middlewares: [...this.getBranchMiddlewares(), ...value.middlewares],
+        };
         const routeHash = quickHash(`${value.method}-${newUrl}`);
-        return [routeHash, value];
+        return [routeHash, updatedValue];
       }),
     );
 
-    const updatedDyamic = this.getDynamicRoutes().map((route) => ({
+    const updatedDynamic = this.getDynamicRoutes().map((route) => ({
       ...route,
-      segments: [...url.split("/").filter(Boolean), ...route.segments],
-      definition: { ...route.definition, url: `${url}${route.definition.url}` },
+      segments: [...prefix.split("/").filter(Boolean), ...route.segments],
+      definition: {
+        ...route.definition,
+        url: `${prefix}${route.definition.url}`,
+        middlewares: [...this.getBranchMiddlewares(), ...route.definition.middlewares],
+      },
     }));
 
-    orvexInstance.mergeWithGlobalRoute(updatedStatic, updatedDyamic);
+    return { updatedStatic, updatedDynamic };
   }
 }

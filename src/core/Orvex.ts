@@ -120,6 +120,14 @@ export class Orvex {
     }
   }
 
+  /**
+   * @internal
+   * Helper for the branch to grab its own middlewares during processing
+   */
+  protected getBranchMiddlewares() {
+    return [...this.branchMiddlewares];
+  }
+
   public prefix(prefixString: string): Orvex {
     this.prefixString = prefixString;
     return this;
@@ -128,10 +136,11 @@ export class Orvex {
   /**
    * Merges the branch routes with global app routes.
    * @param branchedRoutes Nested route handlers.
+   * @param branchedDynamicRoutes Nested dynamic route handlers.
    */
-  public mergeWithGlobalRoute(
+  protected mergeWithGlobalRoute(
     branchedRoutes: TOrvexStaticRoute,
-    branchedDynamicRoutes: typeof this.dynamicRoutes = [],
+    branchedDynamicRoutes: TOrvexDynamicRoute = [],
   ) {
     this.staticRoutes = new Map([...this.staticRoutes, ...branchedRoutes]);
     this.dynamicRoutes = [...this.dynamicRoutes, ...branchedDynamicRoutes];
@@ -141,7 +150,7 @@ export class Orvex {
    *
    * @returns A new map for all the registered static routes.
    */
-  public getStaticRoutes() {
+  protected getStaticRoutes() {
     return new Map(this.staticRoutes);
   }
 
@@ -149,7 +158,7 @@ export class Orvex {
    *
    * @returns A array for all the registered dynamic routes.
    */
-  public getDynamicRoutes() {
+  protected getDynamicRoutes() {
     return [...this.dynamicRoutes];
   }
 
@@ -216,12 +225,17 @@ export class Orvex {
    * @param branch a nested route dispatcher (idk what that means).
    */
   public mount(url: string, branch: OrvexBranch) {
-    //TODO: run some other validation checks here for the prefix.
+    if (!url) throw new Error("[Orvex] Global prefix url cannot be empty");
 
-    if (!url) throw new Error("Global prefix url cannnot be empty");
-    if (url === "/") url = "";
-    const formattedPrefixUrl = `${this.prefixString}${url}`;
-    branch.prefixUrlWith(formattedPrefixUrl, this);
+    // Clean up the URL: if user provides "/", treat it as empty to avoid "//"
+    const cleanUrl = url === "/" ? "" : url;
+    const formattedPrefixUrl = `${this.prefixString}${cleanUrl}`;
+
+    // The logic shift: Orvex ASKS the branch for data
+    const { updatedStatic, updatedDynamic } = branch.getProcessedRoutes(formattedPrefixUrl);
+
+    // Orvex updates ITSELF
+    this.mergeWithGlobalRoute(updatedStatic, updatedDynamic);
   }
 
   /**
