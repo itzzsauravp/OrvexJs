@@ -13,6 +13,8 @@ import { OrvexMiddleware } from "./Middleware";
 import { JUNK_ROUTES, MAX_PAYLOAD_SIZE, RAW_HTTP_RESPONSE } from "./@orvex_constants";
 
 export class Orvex {
+  private prefixString: string = "";
+
   /**
    * `isRoot` true indicates the root Orvex instance
    *
@@ -99,7 +101,7 @@ export class Orvex {
   /**
    * Helper to trigger the middleware pipeline once data is fully received.
    */
-  private handleRequestExecution(socket: net.Socket, rawData: Buffer) {
+  private async handleRequestExecution(socket: net.Socket, rawData: Buffer) {
     try {
       const request = new OrvexRequest(rawData);
       const response = new OrvexResponse(socket);
@@ -111,11 +113,16 @@ export class Orvex {
 
       const chain = [...this.globalMiddlewares, ...middlewares, handler];
       const pipeline = new OrvexMiddleware(chain);
-      pipeline.exeMiddlewarePipeline(request, response);
+      await pipeline.exeMiddlewarePipeline(request, response);
     } catch (err) {
       console.error("Pipeline Error:", err);
       socket.end(RAW_HTTP_RESPONSE.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  public prefix(prefixString: string): Orvex {
+    this.prefixString = prefixString;
+    return this;
   }
 
   /**
@@ -185,20 +192,21 @@ export class Orvex {
     handler: TRoutehandler,
     middlewares: Array<TRoutehandler> = [],
   ) {
+    const prefixedUrl = this.prefixString ? `${this.prefixString}${url}` : url;
     const definition: TRouteDefinition = {
-      url,
+      url: prefixedUrl,
       handler,
       method,
       middlewares: [...this.branchMiddlewares, ...middlewares],
     };
 
-    if (url.includes("$")) {
+    if (prefixedUrl.includes("$")) {
       const segments = url.split("/").filter(Boolean);
       const paramNames = segments.filter((s) => s.startsWith("$")).map((s) => s.slice(1));
       this.dynamicRoutes.push({ segments, paramNames, definition });
       return;
     }
-    const routeHash = quickHash(`${method}-${url}`);
+    const routeHash = quickHash(`${method}-${prefixedUrl}`);
     this.staticRoutes.set(routeHash, definition);
   }
 
@@ -208,7 +216,12 @@ export class Orvex {
    * @param branch a nested route dispatcher (idk what that means).
    */
   public mount(url: string, branch: OrvexBranch) {
-    branch.prefixUrlWith(url, this);
+    //TODO: run some other validation checks here for the prefix.
+
+    if (!url) throw new Error("Global prefix url cannnot be empty");
+    if (url === "/") url = "";
+    const formattedPrefixUrl = `${this.prefixString}${url}`;
+    branch.prefixUrlWith(formattedPrefixUrl, this);
   }
 
   /**
@@ -253,7 +266,7 @@ export class Orvex {
         socket.destroy();
       });
 
-      socket.on("data", (chunk) => {
+      socket.on("data", async (chunk) => {
         requestBuffer = Buffer.concat([requestBuffer, chunk as any]);
 
         // in case if the user lies about the content length
@@ -281,7 +294,7 @@ export class Orvex {
               expectedSize = headerEndIndex + 4 + contentLength;
             } else {
               // this is for the get route as it has no body
-              this.handleRequestExecution(socket, requestBuffer);
+              await this.handleRequestExecution(socket, requestBuffer);
               requestBuffer = Buffer.alloc(0);
               return;
             }
@@ -289,7 +302,7 @@ export class Orvex {
         }
         // check to see if the request has been completed
         if (expectedSize !== -1 && requestBuffer.length >= expectedSize) {
-          this.handleRequestExecution(socket, requestBuffer);
+          await this.handleRequestExecution(socket, requestBuffer);
           requestBuffer = Buffer.alloc(0);
           expectedSize = -1;
         }
