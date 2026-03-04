@@ -1,3 +1,7 @@
+![npm version](https://img.shields.io/npm/v/@itzzsauravp/alpha-orvexjs?label=alpha&color=orange)
+![npm license](https://img.shields.io/npm/l/@itzzsauravp/alpha-orvexjs)
+![npm downloads](https://img.shields.io/npm/dm/@itzzsauravp/alpha-orvexjs)
+
 # OrvexJs
 
 **OrvexJs** is a personal exploration into the internals of the HTTP protocol. Instead of reaching for a high-level framework, I wanted to see if I could build a functional, Express-like experience starting from nothing but raw Node.js TCP sockets.
