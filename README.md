@@ -1,6 +1,7 @@
 ![npm version](https://img.shields.io/npm/v/@itzzsauravp/alpha-orvexjs?label=alpha&color=orange)
 ![npm license](https://img.shields.io/npm/l/@itzzsauravp/alpha-orvexjs)
 ![npm downloads](https://img.shields.io/npm/dm/@itzzsauravp/alpha-orvexjs)
+[![Install from npm](https://img.shields.io/badge/npm-@itzzsauravp/alpha--orvexjs-cb3837?style=for-the-badge&logo=npm)](https://www.npmjs.com/package/@itzzsauravp/alpha-orvexjs)
 
 # OrvexJs
 
