@@ -61,3 +61,9 @@ export interface IOrvexFile {
   size: number;
   buffer: Buffer;
 }
+
+export interface OrvexFileMagicSignature {
+  mimePrefix: string;
+  offset: number;
+  bytes: number[];
+}

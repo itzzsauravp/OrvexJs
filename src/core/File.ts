@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { IOrvexFile } from "./@orvex_types";
+import { SIGNATURES, TEXT_MIMES } from "./@orvex_constants";
 
 export class OrvexFile {
   private readonly _fieldname: string;
@@ -54,8 +55,41 @@ export class OrvexFile {
     const fileNameToSave = this._customName || `${Date.now()}-${this._originalname}`;
     const finalPath = path.join(targetDir, fileNameToSave);
 
-    await fs.writeFile(finalPath, this._buffer);
+    // give the owner read and write permission but for other give just read
+    await fs.writeFile(finalPath, this._buffer, { mode: 0o644 });
     return finalPath;
+  }
+
+  /**
+   *  Validates the current OrvexFile Instance using the MagicSignature of widely used files
+   * @returns boolean
+   */
+  public validate(): boolean {
+    if (!this._buffer || this._buffer.length === 0) return false;
+
+    const isText = TEXT_MIMES.some((prefix) => this._mimetype.startsWith(prefix));
+    if (isText) return true;
+
+    const sig = SIGNATURES.find((s) => this._mimetype.startsWith(s.mimePrefix));
+
+    if (!sig || sig.bytes.length === 0) return true;
+
+    try {
+      const { offset, bytes } = sig;
+
+      if (this._buffer.length < offset + bytes.length) return false;
+
+      for (let i = 0; i < bytes.length; i++) {
+        if (this._buffer[offset + i] !== bytes[i]) {
+          return false;
+        }
+      }
+
+      return true;
+    } catch (err) {
+      console.error("OrvexFile Validation Error:", err.message);
+      return false;
+    }
   }
 
   /**
@@ -102,14 +136,14 @@ export class OrvexFileCollection extends Array<OrvexFile> {
    * Filters the collection for audio files.
    */
   public audio(): OrvexFileCollection {
-    return this.filterByMime("audio");
+    return this.filterByMime(["audio/"]);
   }
 
   /**
    * Filters the collection for video files.
    */
   public video(): OrvexFileCollection {
-    return this.filterByMime("video");
+    return this.filterByMime(["video/", "application/x-matroska"]);
   }
 
   /**
@@ -146,11 +180,19 @@ export class OrvexFileCollection extends Array<OrvexFile> {
     }
   }
 
-  public async getImageFiles() {}
+  public async getImageFiles() {
+    return this.images();
+  }
 
-  public async getDocumentFiles() {}
+  public async getDocumentFiles() {
+    return this.docs();
+  }
 
-  public async getAudioFiles() {}
+  public async getAudioFiles() {
+    return this.audio();
+  }
 
-  public async getVideoFiles() {}
+  public async getVideoFiles() {
+    return this.video();
+  }
 }
